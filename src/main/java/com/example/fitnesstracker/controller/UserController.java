@@ -5,66 +5,120 @@ import com.example.fitnesstracker.dto.UserLoginDTO;
 import com.example.fitnesstracker.dto.UserRegisterDTO;
 import com.example.fitnesstracker.dto.UserUpdateDTO;
 import com.example.fitnesstracker.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
+@RequiredArgsConstructor
 public class UserController {
 
     private final UserService userService;
 
-    @Autowired
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
-
-    // Registro
+    /**
+     * POST /api/users/register
+     * Registra un nuevo usuario
+     *
+     * Posibles respuestas:
+     * - 201 Created: Usuario creado exitosamente
+     * - 400 Bad Request: Datos inválidos
+     * - 409 Conflict: Usuario ya existe
+     */
     @PostMapping("/register")
     public ResponseEntity<UserDTO> register(@RequestBody UserRegisterDTO userRegisterDTO) {
-        return ResponseEntity.ok(userService.registerUser(userRegisterDTO));
+        UserDTO registeredUser = userService.registerUser(userRegisterDTO);
+        return ResponseEntity.status(HttpStatus.CREATED).body(registeredUser);
     }
 
-    // Login
+    /**
+     * POST /api/users/login
+     * Autentica un usuario
+     *
+     * Posibles respuestas:
+     * - 200 OK: Login exitoso
+     * - 401 Unauthorized: Credenciales inválidas
+     * - 404 Not Found: Usuario no existe
+     */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody UserLoginDTO userLoginDTO) {
+    public ResponseEntity<Map<String, String>> login(@RequestBody UserLoginDTO userLoginDTO) {
         boolean success = userService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
-        return success
-                ? ResponseEntity.ok("Login successful")
-                : ResponseEntity.status(401).body("Invalid credentials");
+
+        Map<String, String> response = new HashMap<>();
+
+        if (success) {
+            response.put("message", "Login exitoso");
+            response.put("username", userLoginDTO.getUsername());
+            return ResponseEntity.ok(response);
+        } else {
+            response.put("message", "Credenciales inválidas");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        }
     }
 
-    // Obtener todos los usuarios
+    /**
+     * GET /api/users
+     * Obtiene todos los usuarios registrados
+     *
+     * Posibles respuestas:
+     * - 200 OK: Lista de usuarios
+     */
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+        List<UserDTO> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
     }
 
-    // Obtener usuario por ID
+    /**
+     * GET /api/users/{id}
+     * Obtiene un usuario por su ID
+     *
+     * Posibles respuestas:
+     * - 200 OK: Usuario encontrado
+     * - 404 Not Found: Usuario no existe
+     */
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        Optional<UserDTO> user = userService.getUserById(id);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        UserDTO user = userService.getUserById(id);
+        return ResponseEntity.ok(user);
     }
 
-    // Eliminar usuario
+
+
+    /**
+     * PUT /api/users/{id}
+     * Actualiza un usuario existente
+     *
+     * Posibles respuestas:
+     * - 200 OK: Usuario actualizado exitosamente
+     * - 400 Bad Request: Datos inválidos
+     * - 404 Not Found: Usuario no existe
+     * - 409 Conflict: Username o email ya están en uso
+     */
+    @PutMapping("/{id}")
+    public ResponseEntity<UserDTO> updateUser(
+            @PathVariable Long id,
+            @RequestBody UserUpdateDTO userUpdateDTO) {
+        UserDTO updatedUser = userService.updateUser(id, userUpdateDTO);
+        return ResponseEntity.ok(updatedUser);
+    }
+
+    /**
+     * DELETE /api/users/{id}
+     * Elimina un usuario
+     *
+     * Posibles respuestas:
+     * - 204 No Content: Usuario eliminado exitosamente
+     * - 404 Not Found: Usuario no existe
+     */
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
     }
-    // Actualizar usuario
-    @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,
-            @RequestBody UserUpdateDTO userUpdateDTO) {
-        Optional<UserDTO> updatedUser = userService.updateUser(id, userUpdateDTO);
-        return updatedUser.map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
 }
-

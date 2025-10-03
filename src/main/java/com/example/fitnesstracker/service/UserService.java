@@ -3,6 +3,9 @@ package com.example.fitnesstracker.service;
 import com.example.fitnesstracker.dto.UserDTO;
 import com.example.fitnesstracker.dto.UserRegisterDTO;
 import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.exception.InvalidUserDataException;
+import com.example.fitnesstracker.exception.UserAlreadyExistsException;
+import com.example.fitnesstracker.exception.UserNotFoundException;
 import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.UserRepository;
@@ -11,7 +14,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -21,57 +23,123 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-
-    // Registro de usuario -> retorna DTO
+    /**
+     * Registro de usuario con validaciones
+     */
     public UserDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        // Validar que los campos requeridos no estén vacíos
+        if (userRegisterDTO.getUsername() == null || userRegisterDTO.getUsername().trim().isEmpty()) {
+            throw new InvalidUserDataException("username", "El nombre de usuario es obligatorio");
+        }
+        if (userRegisterDTO.getEmail() == null || userRegisterDTO.getEmail().trim().isEmpty()) {
+            throw new InvalidUserDataException("email", "El email es obligatorio");
+        }
+        if (userRegisterDTO.getPassword() == null || userRegisterDTO.getPassword().trim().isEmpty()) {
+            throw new InvalidUserDataException("password", "La contraseña es obligatoria");
+        }
+        // Validar longitud mínima de la contraseña
+        if (userRegisterDTO.getPassword().length() < 6) {
+            throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
+        }
+
+        // Verificar si ya existe un usuario con ese username
+        if (userRepository.findByUsername(userRegisterDTO.getUsername()).isPresent()) {
+            throw new UserAlreadyExistsException("username", userRegisterDTO.getUsername());
+        }
+
+        // Verificar si ya existe un usuario con ese email
+        if (userRepository.existsByEmail(userRegisterDTO.getEmail())) {
+            throw new UserAlreadyExistsException("email", userRegisterDTO.getEmail());
+        }
+
         User user = userMapper.toEntity(userRegisterDTO);
         user.setPassword(passwordEncoder.encode(userRegisterDTO.getPassword()));
         User savedUser = userRepository.save(user);
+
         return userMapper.toDto(savedUser);
     }
 
-    // Login
+    /**
+     * Login de usuario
+     */
     public boolean login(String username, String rawPassword) {
-        return userRepository.findByUsername(username)
-                .map(user -> passwordEncoder.matches(rawPassword, user.getPassword()))
-                .orElse(false);
+        if (username == null || username.trim().isEmpty()) {
+            throw new InvalidUserDataException("username", "El nombre de usuario es obligatorio");
+        }
+
+        if (rawPassword == null || rawPassword.trim().isEmpty()) {
+            throw new InvalidUserDataException("password", "La contraseña es obligatoria");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con username: " + username));
+
+        return passwordEncoder.matches(rawPassword, user.getPassword());
     }
 
-    // Obtener todos los usuarios
+    /**
+     * Obtiene todos los usuarios registrados
+     */
     public List<UserDTO> getAllUsers() {
-        return userRepository.findAll()
-                .stream()
-                .map(userMapper::toDto)
-                .toList();
+        return userRepository.findAll().stream().map(userMapper::toDto).toList();
     }
 
-    // Obtener usuario por id
-    public Optional<UserDTO> getUserById(Long id) {
-        return userRepository.findById(id).map(userMapper::toDto);
-    }
+    /**
+     * Obtiene un usuario por ID
+     */
+    public UserDTO getUserById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-    // Eliminar usuario
+        return userMapper.toDto(user);
+    }
+    /**
+     * Elimina un usuario por ID
+     */
     public void deleteUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
+        }
+
         userRepository.deleteById(id);
     }
+    /**
+     * Actualiza un usuario existente
+     */
+    public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
+        // Verificar que el usuario existe
+        User existingUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
 
-    // Actualizar usuario
-    public Optional<UserDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
-        return userRepository.findById(id)
-                .map(user -> {
-                    // Actualizamos los campos normales
-                    userMapper.updateUserFromDTO(userUpdateDTO, user);
+        // Si cambió el username, verificar que no esté en uso por otro usuario
+        if (userUpdateDTO.getUsername() != null && !existingUser.getUsername().equals(userUpdateDTO.getUsername())) {
 
-                    // Encriptar password si viene en el DTO
-                    if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()) {
-                        user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
-                    }
+            if (userRepository.findByUsername(userUpdateDTO.getUsername()).isPresent()) {
+                throw new UserAlreadyExistsException("username", userUpdateDTO.getUsername());
+            }
+        }
 
-                    User updated = userRepository.save(user);
-                    return userMapper.toDto(updated);
-                });
+        // Si cambió el email, verificar que no esté en uso por otro usuario
+        if (userUpdateDTO.getEmail() != null && !existingUser.getEmail().equals(userUpdateDTO.getEmail())) {
+
+            if (userRepository.existsByEmail(userUpdateDTO.getEmail())) {
+                throw new UserAlreadyExistsException("email", userUpdateDTO.getEmail());
+            }
+        }
+
+        // Validar longitud de contraseña si viene en el DTO
+        if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()
+                && userUpdateDTO.getPassword().length() < 6) {
+            throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
+        }
+
+        // Actualizamos los campos normales
+        userMapper.updateUserFromDTO(userUpdateDTO, existingUser);
+
+        // Encriptar password si viene en el DTO
+        if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()) {
+            existingUser.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
+        }
+
+        User updatedUser = userRepository.save(existingUser);
+        return userMapper.toDto(updatedUser);
     }
-
-
-
 }
