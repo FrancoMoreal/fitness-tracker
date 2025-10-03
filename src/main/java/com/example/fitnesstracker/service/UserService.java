@@ -31,12 +31,15 @@ public class UserService {
         if (userRegisterDTO.getUsername() == null || userRegisterDTO.getUsername().trim().isEmpty()) {
             throw new InvalidUserDataException("username", "El nombre de usuario es obligatorio");
         }
+
         if (userRegisterDTO.getEmail() == null || userRegisterDTO.getEmail().trim().isEmpty()) {
             throw new InvalidUserDataException("email", "El email es obligatorio");
         }
+
         if (userRegisterDTO.getPassword() == null || userRegisterDTO.getPassword().trim().isEmpty()) {
             throw new InvalidUserDataException("password", "La contraseña es obligatoria");
         }
+
         // Validar longitud mínima de la contraseña
         if (userRegisterDTO.getPassword().length() < 6) {
             throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
@@ -62,7 +65,7 @@ public class UserService {
     /**
      * Login de usuario
      */
-    public boolean login(String username, String rawPassword) {
+    public UserDTO login(String username, String rawPassword) {
         if (username == null || username.trim().isEmpty()) {
             throw new InvalidUserDataException("username", "El nombre de usuario es obligatorio");
         }
@@ -74,7 +77,13 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con username: " + username));
 
-        return passwordEncoder.matches(rawPassword, user.getPassword());
+        // Verificar si la contraseña coincide
+        if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
+            throw new InvalidUserDataException("Credenciales inválidas. Verifica tu usuario y contraseña.");
+        }
+
+        // Si está bien, retornar el usuario
+        return userMapper.toDto(user);
     }
 
     /**
@@ -92,6 +101,7 @@ public class UserService {
 
         return userMapper.toDto(user);
     }
+
     /**
      * Elimina un usuario por ID
      */
@@ -102,6 +112,7 @@ public class UserService {
 
         userRepository.deleteById(id);
     }
+
     /**
      * Actualiza un usuario existente
      */

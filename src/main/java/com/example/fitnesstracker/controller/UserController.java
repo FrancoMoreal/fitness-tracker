@@ -10,9 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -41,24 +39,14 @@ public class UserController {
      * Autentica un usuario
      *
      * Posibles respuestas:
-     * - 200 OK: Login exitoso
-     * - 401 Unauthorized: Credenciales inválidas
+     * - 200 OK: Login exitoso, retorna datos del usuario
+     * - 400 Bad Request: Credenciales inválidas
      * - 404 Not Found: Usuario no existe
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody UserLoginDTO userLoginDTO) {
-        boolean success = userService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
-
-        Map<String, String> response = new HashMap<>();
-
-        if (success) {
-            response.put("message", "Login exitoso");
-            response.put("username", userLoginDTO.getUsername());
-            return ResponseEntity.ok(response);
-        } else {
-            response.put("message", "Credenciales inválidas");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
-        }
+    public ResponseEntity<UserDTO> login(@RequestBody UserLoginDTO userLoginDTO) {
+        UserDTO user = userService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
+        return ResponseEntity.ok(user);
     }
 
     /**
