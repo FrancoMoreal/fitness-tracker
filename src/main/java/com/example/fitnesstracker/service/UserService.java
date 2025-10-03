@@ -1,37 +1,53 @@
 package com.example.fitnesstracker.service;
 
+import com.example.fitnesstracker.dto.UserDTO;
+import com.example.fitnesstracker.dto.UserRegisterDTO;
+import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder;
+    private final UserMapper userMapper;
 
-    // Inyección de dependencias por constructor (recomendada)
-    @Autowired
-    public UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+
+    // Registro de usuario -> retorna DTO
+    public UserDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        User user = userMapper.toEntity(userRegisterDTO);
+        user.setPassword(passwordEncoder.encode(userRegisterDTO.getPassword()));
+        User savedUser = userRepository.save(user);
+        return userMapper.toDto(savedUser);
     }
 
-    // Crear usuario
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    // Login
+    public boolean login(String username, String rawPassword) {
+        return userRepository.findByUsername(username)
+                .map(user -> passwordEncoder.matches(rawPassword, user.getPassword()))
+                .orElse(false);
     }
 
     // Obtener todos los usuarios
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<UserDTO> getAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 
     // Obtener usuario por id
-    public Optional<User> getUserById(Long id) {
-        return userRepository.findById(id);
+    public Optional<UserDTO> getUserById(Long id) {
+        return userRepository.findById(id).map(userMapper::toDto);
     }
 
     // Eliminar usuario
@@ -39,15 +55,23 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
-    public User updateUser(Long id, User userDetails) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id " + id));
+    // Actualizar usuario
+    public Optional<UserDTO> updateUser(Long id, UserUpdateDTO userUpdateDTO) {
+        return userRepository.findById(id)
+                .map(user -> {
+                    // Actualizamos los campos normales
+                    userMapper.updateUserFromDTO(userUpdateDTO, user);
 
-        user.setUsername(userDetails.getUsername());
-        user.setEmail(userDetails.getEmail());
-        user.setPassword(userDetails.getPassword());
-        // agregá cualquier otro campo que tengas
+                    // Encriptar password si viene en el DTO
+                    if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()) {
+                        user.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
+                    }
 
-        return userRepository.save(user);
+                    User updated = userRepository.save(user);
+                    return userMapper.toDto(updated);
+                });
     }
+
+
+
 }

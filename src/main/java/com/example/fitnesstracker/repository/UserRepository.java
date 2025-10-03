@@ -4,7 +4,11 @@ import com.example.fitnesstracker.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    // Podés definir métodos custom si querés, por ahora con JpaRepository alcanza
+    Optional<User> findByUsername(String username);
+    Optional<User> findByEmail(String email);
 }
+// Hacer las query nativas. nativeQuery = true)

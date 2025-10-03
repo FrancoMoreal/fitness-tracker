@@ -1,39 +1,29 @@
 package com.example.fitnesstracker.model;
 
 import jakarta.persistence.*;
-import lombok.*;
-@Data
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
 @AllArgsConstructor
-@Builder // opcional, para crear objetos con User.builder()...
-@ToString
+@NoArgsConstructor
 public class User {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @Column(nullable = false, unique = true)
+    @Column()
     private String username;
-
-    @Column(nullable = false)
+    @Column()
     private String password;
-
-    @Column(nullable = false, unique = true)
+    @Column()
     private String email;
-
-    @Column(nullable = false)
-    private Strign role = "USER";
-
-    // habilitado o no.
-    @Column(nullable = false)
-    private boolean enable = true;
-
-    // fecha de creacion
-    private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
-
+    @Column()
+    private Boolean enable = true; // Por defecto true al crear un usuario
+    @Column()
+    private String role = "USER"; // crear Enum de roles y hacer este campo que sea un Enum.
 }
