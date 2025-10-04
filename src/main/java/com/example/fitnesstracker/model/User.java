@@ -24,6 +24,7 @@ public class User {
     private String email;
     @Column()
     private Boolean enable = true; // Por defecto true al crear un usuario
+    @Enumerated(EnumType.STRING)
     @Column()
-    private String role = "USER"; // crear Enum de roles y hacer este campo que sea un Enum.
+    private String role = "USER";
 }

@@ -3,6 +3,7 @@ package com.example.fitnesstracker.service;
 import com.example.fitnesstracker.dto.UserDTO;
 import com.example.fitnesstracker.dto.UserRegisterDTO;
 import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.UserAlreadyExistsException;
 import com.example.fitnesstracker.exception.UserNotFoundException;
@@ -23,9 +24,9 @@ public class UserService {
     private final BCryptPasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    /**
-     * Registro de usuario con validaciones
-     */
+
+     // Registro de usuario con validaciones
+
     public UserDTO registerUser(UserRegisterDTO userRegisterDTO) {
         // Validar que los campos requeridos no estén vacíos
         if (userRegisterDTO.getUsername() == null || userRegisterDTO.getUsername().trim().isEmpty()) {
@@ -62,9 +63,9 @@ public class UserService {
         return userMapper.toDto(savedUser);
     }
 
-    /**
-     * Login de usuario
-     */
+
+    // Login de usuario
+
     public UserDTO login(String username, String rawPassword) {
         if (username == null || username.trim().isEmpty()) {
             throw new InvalidUserDataException("username", "El nombre de usuario es obligatorio");
@@ -82,7 +83,7 @@ public class UserService {
             throw new InvalidUserDataException("Credenciales inválidas. Verifica tu usuario y contraseña.");
         }
 
-        // Si está bien, retornar el usuario
+        // Si todo está bien, retornar el usuario
         return userMapper.toDto(user);
     }
 
@@ -152,5 +153,14 @@ public class UserService {
 
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDto(updatedUser);
+    }
+    /**
+     * Obtiene todos los usuarios con un rol específico
+     */
+    public List<UserDTO> getUsersByRole(UserRole role) {
+        return userRepository.findByRole(role)
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 }

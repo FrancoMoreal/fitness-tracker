@@ -4,6 +4,7 @@ import com.example.fitnesstracker.dto.UserDTO;
 import com.example.fitnesstracker.dto.UserLoginDTO;
 import com.example.fitnesstracker.dto.UserRegisterDTO;
 import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

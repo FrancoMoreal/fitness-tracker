@@ -1,28 +1,39 @@
 package com.example.fitnesstracker.mapper;
 
-import com.example.fitnesstracker.dto.*;
+import com.example.fitnesstracker.dto.UserDTO;
+import com.example.fitnesstracker.dto.UserRegisterDTO;
+import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.model.User;
-import org.mapstruct.Mapper;
-import org.mapstruct.MappingTarget;
-import org.mapstruct.NullValuePropertyMappingStrategy;
+import org.mapstruct.*;
 
-import java.util.List;
-
-@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+@Mapper(componentModel = "spring")
 public interface UserMapper {
 
-    // Registro
-    User toEntity(UserRegisterDTO dto);
-    UserRegisterDTO toRegisterDto(User user);
-
-    // Consulta
+    /**
+     * Convierte User a UserDTO
+     * Excluye el password por seguridad
+     */
+    @Mapping(target = "password", ignore = true)
     UserDTO toDto(User user);
 
-    // Actualización (sin password)
+    /**
+     * Convierte UserRegisterDTO a User
+     * El password se encripta en el Service
+     * El role se asigna por defecto en el Service
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "role", ignore = true)
+    User toEntity(UserRegisterDTO dto);
+
+    /**
+     * Actualiza un User existente con datos de UserUpdateDTO
+     * Ignora campos null para no sobrescribir valores existentes
+     * El password se maneja por separado en el Service
+     */
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "password", ignore = true)
     void updateUserFromDTO(UserUpdateDTO dto, @MappingTarget User user);
-
-    // Soporte para listas
-    List<UserDTO> toDtoList(List<User> users);
-    List<UserRegisterDTO> toRegisterDtoList(List<User> users);
-
 }
