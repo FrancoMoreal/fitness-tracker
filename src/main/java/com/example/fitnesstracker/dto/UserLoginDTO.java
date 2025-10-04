@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,12 +10,21 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-
+@Schema(description = "Credenciales para iniciar sesión")
 public class UserLoginDTO {
+
+    @Schema(
+            description = "Nombre de usuario",
+            example = "john_doe",
+            required = true
+    )
     private String username;
+
+    @Schema(
+            description = "Contraseña del usuario",
+            example = "securePassword123",
+            required = true,
+            format = "password"
+    )
     private String password;
-
-
 }
-
-// Este es para cuando alguien hace login. Solo recibis username y pass

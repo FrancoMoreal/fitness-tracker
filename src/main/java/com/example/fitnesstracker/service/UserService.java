@@ -119,10 +119,13 @@ public class UserService {
      */
     public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         // Verificar que el usuario existe
-        User existingUser = userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id));
+        User existingUser = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(id));
 
         // Si cambió el username, verificar que no esté en uso por otro usuario
-        if (userUpdateDTO.getUsername() != null && !existingUser.getUsername().equals(userUpdateDTO.getUsername())) {
+        if (userUpdateDTO.getUsername() != null &&
+                !userUpdateDTO.getUsername().trim().isEmpty() &&
+                !existingUser.getUsername().equals(userUpdateDTO.getUsername())) {
 
             if (userRepository.findByUsername(userUpdateDTO.getUsername()).isPresent()) {
                 throw new UserAlreadyExistsException("username", userUpdateDTO.getUsername());
@@ -130,7 +133,9 @@ public class UserService {
         }
 
         // Si cambió el email, verificar que no esté en uso por otro usuario
-        if (userUpdateDTO.getEmail() != null && !existingUser.getEmail().equals(userUpdateDTO.getEmail())) {
+        if (userUpdateDTO.getEmail() != null &&
+                !userUpdateDTO.getEmail().trim().isEmpty() &&
+                !existingUser.getEmail().equals(userUpdateDTO.getEmail())) {
 
             if (userRepository.existsByEmail(userUpdateDTO.getEmail())) {
                 throw new UserAlreadyExistsException("email", userUpdateDTO.getEmail());
@@ -138,13 +143,28 @@ public class UserService {
         }
 
         // Validar longitud de contraseña si viene en el DTO
-        if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()
-                && userUpdateDTO.getPassword().length() < 6) {
+        if (userUpdateDTO.getPassword() != null &&
+                !userUpdateDTO.getPassword().isBlank() &&
+                userUpdateDTO.getPassword().length() < 6) {
             throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
         }
 
-        // Actualizamos los campos normales
-        userMapper.updateUserFromDTO(userUpdateDTO, existingUser);
+        // Actualizar campos manualmente para tener más control
+        if (userUpdateDTO.getUsername() != null && !userUpdateDTO.getUsername().trim().isEmpty()) {
+            existingUser.setUsername(userUpdateDTO.getUsername());
+        }
+
+        if (userUpdateDTO.getEmail() != null && !userUpdateDTO.getEmail().trim().isEmpty()) {
+            existingUser.setEmail(userUpdateDTO.getEmail());
+        }
+
+//        if (userUpdateDTO.getEnabled() != null) {
+//            existingUser.setEnabled(userUpdateDTO.getEnabled());
+//        }
+
+        if (userUpdateDTO.getRole() != null) {
+            existingUser.setRole(userUpdateDTO.getRole());
+        }
 
         // Encriptar password si viene en el DTO
         if (userUpdateDTO.getPassword() != null && !userUpdateDTO.getPassword().isBlank()) {
@@ -154,6 +174,7 @@ public class UserService {
         User updatedUser = userRepository.save(existingUser);
         return userMapper.toDto(updatedUser);
     }
+
     /**
      * Obtiene todos los usuarios con un rol específico
      */

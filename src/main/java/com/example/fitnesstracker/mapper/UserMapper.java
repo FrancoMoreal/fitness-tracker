@@ -3,7 +3,6 @@ package com.example.fitnesstracker.mapper;
 import com.example.fitnesstracker.dto.UserDTO;
 import com.example.fitnesstracker.dto.UserRegisterDTO;
 import com.example.fitnesstracker.dto.UserUpdateDTO;
-import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.model.User;
 import org.mapstruct.*;
 

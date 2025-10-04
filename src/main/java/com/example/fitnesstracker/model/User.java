@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.model;
 
+import com.example.fitnesstracker.enums.UserRole;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +26,6 @@ public class User {
     @Column()
     private Boolean enable = true; // Por defecto true al crear un usuario
     @Enumerated(EnumType.STRING)
-    @Column()
-    private String role = "USER";
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
 }
