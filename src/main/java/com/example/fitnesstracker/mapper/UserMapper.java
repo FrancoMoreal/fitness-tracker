@@ -1,19 +1,20 @@
 package com.example.fitnesstracker.mapper;
 
-import com.example.fitnesstracker.dto.UserDTO;
-import com.example.fitnesstracker.dto.UserRegisterDTO;
-import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.dto.response.UserDTO;
+import com.example.fitnesstracker.dto.request.UserRegisterDTO;
+import com.example.fitnesstracker.dto.request.UserUpdateDTO;
 import com.example.fitnesstracker.model.User;
 import org.mapstruct.*;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+
 public interface UserMapper {
 
     /**
      * Convierte User a UserDTO
      * Excluye el password por seguridad
      */
-    @Mapping(target = "password", ignore = true)
+   // @Mapping(target = "password", ignore = true)
     UserDTO toDto(User user);
 
     /**
@@ -22,7 +23,7 @@ public interface UserMapper {
      * El role se asigna por defecto en el Service
      */
     @Mapping(target = "id", ignore = true)
-    @Mapping(target = "enabled", ignore = true)
+    @Mapping(target = "enable", ignore = true)
     @Mapping(target = "role", ignore = true)
     User toEntity(UserRegisterDTO dto);
 

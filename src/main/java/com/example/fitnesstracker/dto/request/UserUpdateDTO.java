@@ -1,4 +1,4 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.request;
 
 import com.example.fitnesstracker.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -37,7 +37,7 @@ public class UserUpdateDTO {
             description = "Habilitar o deshabilitar el usuario",
             example = "true"
     )
-    private Boolean enabled;
+    private Boolean enable;
 
     @Schema(
             description = "Nuevo rol del usuario (solo admins deberían poder cambiar esto)",

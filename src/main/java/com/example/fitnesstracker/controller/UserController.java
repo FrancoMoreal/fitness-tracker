@@ -1,10 +1,10 @@
 package com.example.fitnesstracker.controller;
 
 import com.example.fitnesstracker.dto.response.ErrorResponse;
-import com.example.fitnesstracker.dto.UserDTO;
-import com.example.fitnesstracker.dto.UserLoginDTO;
-import com.example.fitnesstracker.dto.UserRegisterDTO;
-import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.dto.response.UserDTO;
+import com.example.fitnesstracker.dto.request.UserLoginDTO;
+import com.example.fitnesstracker.dto.request.UserRegisterDTO;
+import com.example.fitnesstracker.dto.request.UserUpdateDTO;
 import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -269,3 +269,5 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 }
+
+// CREAR UNA INTERFAZ DE ESTE CONTROLLER CON TODAS LAS DEFINICIONES PARA SWAGGER E IMPLEMENTARLA EN ESTA CLASE.

@@ -1,4 +1,4 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;

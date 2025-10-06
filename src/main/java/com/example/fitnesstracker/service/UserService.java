@@ -1,8 +1,8 @@
 package com.example.fitnesstracker.service;
 
-import com.example.fitnesstracker.dto.UserDTO;
-import com.example.fitnesstracker.dto.UserRegisterDTO;
-import com.example.fitnesstracker.dto.UserUpdateDTO;
+import com.example.fitnesstracker.dto.response.UserDTO;
+import com.example.fitnesstracker.dto.request.UserRegisterDTO;
+import com.example.fitnesstracker.dto.request.UserUpdateDTO;
 import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.UserAlreadyExistsException;
@@ -176,7 +176,7 @@ public class UserService {
     }
 
     /**
-     * Obtiene todos los usuarios con un rol específico
+     * Obtiene  todos los usuarios con un rol específico
      */
     public List<UserDTO> getUsersByRole(UserRole role) {
         return userRepository.findByRole(role)

@@ -1,4 +1,4 @@
-package com.example.fitnesstracker.dto;
+package com.example.fitnesstracker.dto.response;
 
 import com.example.fitnesstracker.enums.UserRole;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,7 +24,7 @@ public class UserDTO {
     private String email;
 
     @Schema(description = "Estado del usuario (activo/inactivo)", example = "true")
-    private Boolean enabled;
+    private Boolean enable;
 
     @Schema(description = "Rol del usuario en el sistema", example = "USER")
     private UserRole role;
