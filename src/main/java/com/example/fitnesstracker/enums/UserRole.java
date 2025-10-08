@@ -1,7 +1,7 @@
 package com.example.fitnesstracker.enums;
 
 public enum UserRole {
-    USER("Usuario"), ADMIN("Administrador"), TRAINER("Entrenador");
+    MEMBER("Miembro"), ADMIN("Administrador"), TRAINER("Entrenador");
 
     private final String displayName;
 
@@ -19,7 +19,7 @@ public enum UserRole {
      */
     public static UserRole fromString(String role) {
         if (role == null) {
-            return USER; // Valor por defecto
+            return MEMBER; // Valor por defecto
         }
 
         try {

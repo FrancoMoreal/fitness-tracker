@@ -10,7 +10,7 @@ import org.mapstruct.*;
 
 public interface UserMapper {
 
-   // @Mapping(target = "password", ignore = true)
+    // @Mapping(target = "password", ignore = true)
     UserDTO toDto(User user);
 
     @Mapping(target = "id", ignore = true)

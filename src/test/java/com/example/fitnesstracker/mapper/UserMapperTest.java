@@ -30,7 +30,7 @@ class UserMapperTest {
         testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
         testUser.setEnable(true);
-        testUser.setRole(UserRole.USER);
+        testUser.setRole(UserRole.MEMBER);
     }
 
     @Test
@@ -45,7 +45,7 @@ class UserMapperTest {
         assertThat(result.getUsername()).isEqualTo("testuser");
         assertThat(result.getEmail()).isEqualTo("test@example.com");
         assertThat(result.getEnable()).isTrue();
-        assertThat(result.getRole()).isEqualTo(UserRole.USER);
+        assertThat(result.getRole()).isEqualTo(UserRole.MEMBER);
     }
 
     @Test

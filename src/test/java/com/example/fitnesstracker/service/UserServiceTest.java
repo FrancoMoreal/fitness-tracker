@@ -59,7 +59,7 @@ class UserServiceTest {
         testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
         testUser.setEnable(true);
-        testUser.setRole(UserRole.USER);
+        testUser.setRole(UserRole.MEMBER);
 
         testUserDTO = new UserDTO();
         testUserDTO.setId(1L);
@@ -67,7 +67,7 @@ class UserServiceTest {
         testUserDTO.setUsername("testuser");
         testUserDTO.setEmail("test@example.com");
         testUserDTO.setEnable(true);
-        testUserDTO.setRole(UserRole.USER);
+        testUserDTO.setRole(UserRole.MEMBER);
 
         testRegisterDTO = new UserRegisterDTO();
         testRegisterDTO.setUsername("newuser");
@@ -323,16 +323,16 @@ class UserServiceTest {
     @DisplayName("getUsersByRole - Debería filtrar usuarios por rol")
     void getUsersByRole_Success() {
         // Arrange
-        when(userRepository.findByRole(UserRole.USER)).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findByRole(UserRole.MEMBER)).thenReturn(Arrays.asList(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
         // Act
-        List<UserDTO> result = userService.getUsersByRole(UserRole.USER);
+        List<UserDTO> result = userService.getUsersByRole(UserRole.MEMBER);
 
         // Assert
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRole()).isEqualTo(UserRole.USER);
-        verify(userRepository).findByRole(UserRole.USER);
+        assertThat(result.get(0).getRole()).isEqualTo(UserRole.MEMBER);
+        verify(userRepository).findByRole(UserRole.MEMBER);
     }
 
     // ==================== UPDATE USER TESTS ====================

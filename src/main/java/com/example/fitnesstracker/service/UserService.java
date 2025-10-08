@@ -56,7 +56,7 @@ public class UserService {
 
         User user = userMapper.toEntity(userRegisterDTO);
         user.setPassword(passwordEncoder.encode(userRegisterDTO.getPassword()));
-        user.setRole(UserRole.USER); // Asignar rol por defecto
+        user.setRole(UserRole.MEMBER); // Asignar rol por defecto
         user.setEnable(true); // Asegurar que está habilitado
         User savedUser = userRepository.save(user);
 
