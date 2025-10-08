@@ -19,16 +19,10 @@ public class GlobalExceptionHandler {
      * Maneja excepciones cuando no se encuentra un usuario
      */
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<ErrorResponse> handleUserNotFoundException(
-            UserNotFoundException ex,
-            WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleUserNotFoundException(UserNotFoundException ex, WebRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.NOT_FOUND.value(),
-                "Not Found",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
+        ErrorResponse error = new ErrorResponse(HttpStatus.NOT_FOUND.value(), "Not Found", ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
 
         return new ResponseEntity<>(error, HttpStatus.NOT_FOUND);
     }
@@ -37,16 +31,11 @@ public class GlobalExceptionHandler {
      * Maneja excepciones cuando un usuario ya existe (duplicado)
      */
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(
-            UserAlreadyExistsException ex,
+    public ResponseEntity<ErrorResponse> handleUserAlreadyExistsException(UserAlreadyExistsException ex,
             WebRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                "Conflict",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
+        ErrorResponse error = new ErrorResponse(HttpStatus.CONFLICT.value(), "Conflict", ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
 
         return new ResponseEntity<>(error, HttpStatus.CONFLICT);
     }
@@ -55,16 +44,11 @@ public class GlobalExceptionHandler {
      * Maneja excepciones de datos inválidos del usuario
      */
     @ExceptionHandler(InvalidUserDataException.class)
-    public ResponseEntity<ErrorResponse> handleInvalidUserDataException(
-            InvalidUserDataException ex,
+    public ResponseEntity<ErrorResponse> handleInvalidUserDataException(InvalidUserDataException ex,
             WebRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Bad Request",
-                ex.getMessage(),
-                request.getDescription(false).replace("uri=", "")
-        );
+        ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", ex.getMessage(),
+                request.getDescription(false).replace("uri=", ""));
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
@@ -73,8 +57,7 @@ public class GlobalExceptionHandler {
      * Maneja errores de validación de Bean Validation (@Valid, @NotBlank, etc.)
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationException(
-            MethodArgumentNotValidException ex,
+    public ResponseEntity<ErrorResponse> handleValidationException(MethodArgumentNotValidException ex,
             WebRequest request) {
 
         List<String> details = new ArrayList<>();
@@ -82,12 +65,9 @@ public class GlobalExceptionHandler {
             details.add(fieldError.getField() + ": " + fieldError.getDefaultMessage());
         }
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                "Validation Failed",
+        ErrorResponse error = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), "Validation Failed",
                 "Los datos enviados no cumplen con las validaciones requeridas",
-                request.getDescription(false).replace("uri=", "")
-        );
+                request.getDescription(false).replace("uri=", ""));
         error.setDetails(details);
 
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
@@ -98,16 +78,11 @@ public class GlobalExceptionHandler {
      * Este es el "safety net" para errores inesperados
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGlobalException(
-            Exception ex,
-            WebRequest request) {
+    public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
 
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Internal Server Error",
+        ErrorResponse error = new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), "Internal Server Error",
                 "Ocurrió un error inesperado en el servidor. Por favor, contacte al administrador.",
-                request.getDescription(false).replace("uri=", "")
-        );
+                request.getDescription(false).replace("uri=", ""));
 
         // Log del error para debugging (considera usar un logger como SLF4J en producción)
         System.err.println("Error no manejado: " + ex.getClass().getName());

@@ -1,6 +1,7 @@
 package com.example.fitnesstracker.model;
 
 import com.example.fitnesstracker.enums.UserRole;
+import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,18 +14,20 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    @Column()
+public class User extends BaseEntity {
+
+    @Column(nullable = false, unique = true, length = 50)
     private String username;
-    @Column()
+
+    @Column(nullable = false)
     private String password;
-    @Column()
+
+    @Column(nullable = false, unique = true)
     private String email;
-    @Column()
-    private Boolean enable = true; // Por defecto true al crear un usuario
+
+    @Column(nullable = false)
+    private Boolean enable = true;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.USER;
