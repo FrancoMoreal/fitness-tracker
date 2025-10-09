@@ -4,6 +4,7 @@ import com.example.fitnesstracker.api.UserApi;
 import com.example.fitnesstracker.dto.request.UserLoginDTO;
 import com.example.fitnesstracker.dto.request.UserRegisterDTO;
 import com.example.fitnesstracker.dto.request.UserUpdateDTO;
+import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.service.UserService;
@@ -14,6 +15,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * Controlador REST para la gestión de usuarios.
+ * Implementa la interfaz UserApi que contiene toda la documentación de Swagger.
+ *
+ * Este controlador se mantiene limpio y enfocado solo en la lógica,
+ * delegando la documentación a la interfaz UserApi.
+ */
 @RestController
 @RequiredArgsConstructor
 public class UserController implements UserApi {
@@ -27,10 +35,11 @@ public class UserController implements UserApi {
     }
 
     @Override
-    public ResponseEntity<UserDTO> login(UserLoginDTO userLoginDTO) {
-        UserDTO user = userService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
-        return ResponseEntity.ok(user);
+    public ResponseEntity<AuthResponse> login(UserLoginDTO userLoginDTO) {
+        AuthResponse authResponse = userService.login(userLoginDTO.getUsername(), userLoginDTO.getPassword());
+        return ResponseEntity.ok(authResponse);
     }
+
 
     @Override
     public ResponseEntity<List<UserDTO>> getAllUsers() {
@@ -79,4 +88,5 @@ public class UserController implements UserApi {
         userService.permanentlyDeleteUser(id);
         return ResponseEntity.noContent().build();
     }
+
 }

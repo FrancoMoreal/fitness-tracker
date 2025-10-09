@@ -2,14 +2,17 @@ package com.example.fitnesstracker.service;
 
 import com.example.fitnesstracker.dto.request.UserRegisterDTO;
 import com.example.fitnesstracker.dto.request.UserUpdateDTO;
+import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.enums.UserRole;
+import org.springframework.security.core.Authentication;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.UserAlreadyExistsException;
 import com.example.fitnesstracker.exception.UserNotFoundException;
 import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.UserRepository;
+import com.example.fitnesstracker.security.JwtTokenProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -18,6 +21,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.Arrays;
@@ -41,6 +46,12 @@ class UserServiceTest {
 
     @Mock
     private UserMapper userMapper;
+
+    @Mock
+    private AuthenticationManager authenticationManager;
+
+    @Mock
+    private JwtTokenProvider jwtTokenProvider;
 
     @InjectMocks
     private UserService userService;
@@ -202,40 +213,49 @@ class UserServiceTest {
     @DisplayName("login - Debería hacer login exitosamente")
     void login_Success() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
+        String username = "testuser";
+        String password = "password123";
+        String token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...";
+
+        Authentication authentication = mock(Authentication.class);
+
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenReturn(authentication);
+        when(jwtTokenProvider.generateToken(username)).thenReturn(token);
+        when(userRepository.findByUsername(username)).thenReturn(Optional.of(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
         // Act
-        UserDTO result = userService.login("testuser", "password123");
+        AuthResponse result = userService.login(username, password);
 
         // Assert
         assertThat(result).isNotNull();
-        assertThat(result.getUsername()).isEqualTo("testuser");
-        verify(userRepository).findByUsername("testuser");
-        verify(passwordEncoder).matches("password123", "encodedPassword");
+        assertThat(result.getToken()).isEqualTo(token);
+        assertThat(result.getUser().getUsername()).isEqualTo(username);
+
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(jwtTokenProvider).generateToken(username);
     }
 
     @Test
     @DisplayName("login - Debería lanzar excepción con usuario inexistente")
     void login_UserNotFound() {
         // Arrange
-        when(userRepository.findByUsername("noexiste")).thenReturn(Optional.empty());
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new UserNotFoundException("Usuario no encontrado: noexiste"));
 
         // Act & Assert
         assertThatThrownBy(() -> userService.login("noexiste", "password123"))
                 .isInstanceOf(UserNotFoundException.class)
                 .hasMessageContaining("noexiste");
-
-        verify(passwordEncoder, never()).matches(anyString(), anyString());
     }
 
     @Test
     @DisplayName("login - Debería lanzar excepción con contraseña incorrecta")
     void login_WrongPassword() {
         // Arrange
-        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches("wrongpassword", "encodedPassword")).thenReturn(false);
+        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
+                .thenThrow(new InvalidUserDataException("Credenciales inválidas"));
 
         // Act & Assert
         assertThatThrownBy(() -> userService.login("testuser", "wrongpassword"))
