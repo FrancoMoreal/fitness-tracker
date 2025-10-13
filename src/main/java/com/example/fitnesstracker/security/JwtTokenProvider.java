@@ -30,69 +30,38 @@ public class JwtTokenProvider {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Genera un token JWT para el usuario especificado.
-     */
     public String generateToken(String username) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtExpirationMs);
-
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
-        // ✅ Obtener el usuario completo para incluir el rol
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + username));
 
         return Jwts.builder()
                 .subject(username)
-                .claim("role", user.getRole().name()) // ✅ Agregar rol al token
-                .issuedAt(now)
-                .expiration(expiryDate)
+                .claim("role", user.getRole().name())
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
                 .signWith(key, Jwts.SIG.HS512)
                 .compact();
     }
 
-
-    /**
-     * Extrae el username del token JWT.
-     */
     public String getUsernameFromToken(String token) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
-        Claims claims = Jwts.parser()
+        return Jwts.parser()
                 .verifyWith(key)
                 .build()
                 .parseSignedClaims(token)
-                .getPayload();
-
-        return claims.getSubject();
+                .getPayload()
+                .getSubject();
     }
 
-    /**
-     * Valida un token JWT.
-     */
     public boolean validateToken(String token) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-
-            Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token);
-
+            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
             return true;
-        } catch (SecurityException ex) {
-            logger.error("Firma JWT inválida: {}", ex.getMessage());
-        } catch (MalformedJwtException ex) {
-            logger.error("Token JWT malformado: {}", ex.getMessage());
-        } catch (ExpiredJwtException ex) {
-            logger.error("Token JWT expirado: {}", ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
-            logger.error("Token JWT no soportado: {}", ex.getMessage());
-        } catch (IllegalArgumentException ex) {
-            logger.error("JWT claims string está vacío: {}", ex.getMessage());
+        } catch (JwtException | IllegalArgumentException ex) {
+            logger.error("Error al validar el token JWT: {}", ex.getMessage());
         }
-
         return false;
     }
 }
