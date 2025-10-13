@@ -1,0 +1,50 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.17.xsd">
+
+    <changeSet id="2" author="franco">
+        <insert tableName="users">
+            <column name="username" value="admin"/>
+            <column name="password" value="adminpass"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="enable" valueBoolean="true"/>
+            <column name="role" value="ADMIN"/>
+            <column name="external_id" value="uuid-1"/>
+        </insert>
+        <insert tableName="users">
+            <column name="username" value="trainer1"/>
+            <column name="password" value="trainerpass"/>
+            <column name="email" value="trainer1@example.com"/>
+            <column name="enable" valueBoolean="true"/>
+            <column name="role" value="TRAINER"/>
+            <column name="external_id" value="uuid-2"/>
+        </insert>
+        <insert tableName="users">
+            <column name="username" value="member1"/>
+            <column name="password" value="memberpass"/>
+            <column name="email" value="member1@example.com"/>
+            <column name="enable" valueBoolean="true"/>
+            <column name="role" value="MEMBER"/>
+            <column name="external_id" value="uuid-3"/>
+        </insert>
+
+        <insert tableName="trainers">
+            <column name="name" value="Juan Pérez"/>
+            <column name="email" value="trainer1@example.com"/>
+            <column name="specialty" value="Fuerza"/>
+            <column name="user_id" valueNumeric="2"/>
+        </insert>
+
+        <insert tableName="members">
+            <column name="name" value="Ana Gómez"/>
+            <column name="email" value="member1@example.com"/>
+            <column name="age" valueNumeric="28"/>
+            <column name="weight" valueNumeric="65.5"/>
+            <column name="height" valueNumeric="1.68"/>
+            <column name="user_id" valueNumeric="3"/>
+            <column name="trainer_id" valueNumeric="1"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>
