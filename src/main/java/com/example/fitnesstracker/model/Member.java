@@ -1,29 +1,38 @@
 package com.example.fitnesstracker.model;
 
+import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Entity
 @Table(name = "members")
 @Getter
 @Setter
-public class Member {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@NoArgsConstructor
+@AllArgsConstructor
+public class Member extends BaseEntity {
 
-    private String name;
-    private String email;
-    private Integer age;
-    private Double weight;
-    private Double height;
-
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainer_id")
     private Trainer trainer;
+
+    @Column(nullable = false)
+    private Integer age;
+
+    @Column(nullable = false)
+    private Double weight;
+
+    @Column(nullable = false)
+    private Double height;
+
+    @Column(length = 255)
+    private String fitnessGoal;
+
+    public Double calculateBMI() {
+        return (height == null || height == 0 || weight == null) ? null : weight / (height * height);
+    }
 }

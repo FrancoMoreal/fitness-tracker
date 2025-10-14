@@ -7,10 +7,8 @@ import com.example.fitnesstracker.model.User;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-
 public interface UserMapper {
 
-    // @Mapping(target = "password", ignore = true)
     UserDTO toDto(User user);
 
     @Mapping(target = "id", ignore = true)

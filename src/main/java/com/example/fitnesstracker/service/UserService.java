@@ -17,8 +17,9 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -27,11 +28,12 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final BCryptPasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final AuthenticationManager authenticationManager;
     private final JwtTokenProvider jwtTokenProvider;
 
+    @Transactional
     public UserDTO registerUser(UserRegisterDTO userRegisterDTO) {
         validateUserRegistration(userRegisterDTO);
 
@@ -58,6 +60,7 @@ public class UserService {
         return new AuthResponse(token, userMapper.toDto(user));
     }
 
+    @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
         return userRepository.findAllActive()
                 .stream()
@@ -65,16 +68,19 @@ public class UserService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
         return userMapper.toDto(userRepository.findByIdActive(id)
                 .orElseThrow(() -> new UserNotFoundException(id)));
     }
 
+    @Transactional(readOnly = true)
     public UserDTO getUserByExternalId(String externalId) {
         return userMapper.toDto(userRepository.findByExternalId(externalId)
                 .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con external ID: " + externalId)));
     }
 
+    @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findByIdActive(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -82,6 +88,7 @@ public class UserService {
         userRepository.save(user);
     }
 
+    @Transactional
     public UserDTO restoreUser(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -94,6 +101,7 @@ public class UserService {
         return userMapper.toDto(userRepository.save(user));
     }
 
+    @Transactional
     public void permanentlyDeleteUser(Long id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
@@ -101,24 +109,15 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    @Transactional
     public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
         User existingUser = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
         validateUserUpdate(existingUser, userUpdateDTO);
 
-        if (userUpdateDTO.getUsername() != null) {
-            existingUser.setUsername(userUpdateDTO.getUsername());
-        }
-        if (userUpdateDTO.getEmail() != null) {
-            existingUser.setEmail(userUpdateDTO.getEmail());
-        }
-        if (userUpdateDTO.getEnable() != null) {
-            existingUser.setEnable(userUpdateDTO.getEnable());
-        }
-        if (userUpdateDTO.getRole() != null) {
-            existingUser.setRole(userUpdateDTO.getRole());
-        }
+        userMapper.updateUserFromDTO(userUpdateDTO, existingUser);
+
         if (userUpdateDTO.getPassword() != null) {
             existingUser.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
@@ -126,6 +125,7 @@ public class UserService {
         return userMapper.toDto(userRepository.save(existingUser));
     }
 
+    @Transactional(readOnly = true)
     public List<UserDTO> getUsersByRole(UserRole role) {
         return userRepository.findByRole(role)
                 .stream()

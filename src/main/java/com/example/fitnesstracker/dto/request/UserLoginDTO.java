@@ -13,9 +13,9 @@ import lombok.Setter;
 @Schema(description = "Credenciales para iniciar sesión")
 public class UserLoginDTO {
 
-    @Schema(description = "Nombre de usuario", example = "john_doe", required = true)
+    @Schema(description = "Nombre de usuario", example = "john_doe")
     private String username;
 
-    @Schema(description = "Contraseña del usuario", example = "securePassword123", required = true, format = "password")
+    @Schema(description = "Contraseña del usuario", example = "securePassword123", format = "password")
     private String password;
 }
