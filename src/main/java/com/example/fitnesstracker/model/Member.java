@@ -9,8 +9,7 @@ import java.time.LocalDate;
 @Table(name = "members", indexes = {
         @Index(name = "idx_member_user", columnList = "user_id"),
         @Index(name = "idx_member_trainer", columnList = "trainer_id"),
-        @Index(name = "idx_member_phone", columnList = "phone"),
-        @Index(name = "idx_member_status", columnList = "membership_status")
+        @Index(name = "idx_member_phone", columnList = "phone")
 })
 @Data
 @NoArgsConstructor

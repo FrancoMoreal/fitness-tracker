@@ -1,21 +1,20 @@
 package com.example.fitnesstracker.dto.request;
 
-import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-@Getter
-@Setter
-@AllArgsConstructor
+@Data
 @NoArgsConstructor
-@Schema(description = "Credenciales para iniciar sesión")
+@AllArgsConstructor
+@Builder
 public class UserLoginDTO {
 
-    @Schema(description = "Nombre de usuario", example = "john_doe")
+    @NotBlank(message = "Username es requerido")
     private String username;
 
-    @Schema(description = "Contraseña del usuario", example = "securePassword123", format = "password")
+    @NotBlank(message = "Password es requerido")
     private String password;
 }

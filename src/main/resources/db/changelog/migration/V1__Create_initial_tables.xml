@@ -77,7 +77,6 @@
             <column name="date_of_birth" type="DATE">
                 <constraints nullable="false"/>
             </column>
-            <column name="emergency_contact" type="VARCHAR(255)"/>
             <column name="membership_start_date" type="DATE">
                 <constraints nullable="false"/>
             </column>
@@ -86,7 +85,6 @@
             </column>
             <column name="weight" type="DOUBLE"/>
             <column name="height" type="DOUBLE"/>
-            <column name="blood_type" type="VARCHAR(3)"/>
             <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>

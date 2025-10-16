@@ -57,7 +57,10 @@ public class UserService {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con username: " + username));
 
-        return new AuthResponse(token, userMapper.toDto(user));
+        return AuthResponse.builder()
+                .token(token)
+                .user(userMapper.toDto(user))
+                .build();
     }
 
     @Transactional(readOnly = true)

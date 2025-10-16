@@ -46,12 +46,10 @@
             <column name="last_name" value="Gómez"/>
             <column name="phone" value="1122334455"/>
             <column name="date_of_birth" valueDate="1995-05-10"/>
-            <column name="emergency_contact" value="Maria Gómez"/>
             <column name="membership_start_date" valueDate="2024-01-01"/>
             <column name="membership_end_date" valueDate="2024-12-31"/>
             <column name="weight" valueNumeric="65.5"/>
             <column name="height" valueNumeric="1.68"/>
-            <column name="blood_type" value="O+"/>
             <column name="is_active" valueBoolean="true"/>
             <column name="user_id" valueNumeric="3"/>
             <column name="trainer_id" valueNumeric="1"/>
