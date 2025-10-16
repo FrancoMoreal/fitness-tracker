@@ -44,7 +44,7 @@ class UserMapperTest {
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getUsername()).isEqualTo("testuser");
         assertThat(result.getEmail()).isEqualTo("test@example.com");
-        assertThat(result.getEnable()).isTrue();
+        assertThat(result.getEnabled()).isTrue();
         assertThat(result.getRole()).isEqualTo(UserRole.USER);
     }
 

@@ -77,7 +77,7 @@ class UserServiceTest {
         testUserDTO.setExternalId("550e8400-e29b-41d4-a716-446655440000");
         testUserDTO.setUsername("testuser");
         testUserDTO.setEmail("test@example.com");
-        testUserDTO.setEnable(true);
+        testUserDTO.setEnabled(true);
         testUserDTO.setRole(UserRole.USER);
 
         testRegisterDTO = new UserRegisterDTO();
