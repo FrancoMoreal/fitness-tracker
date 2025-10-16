@@ -2,48 +2,78 @@ package com.example.fitnesstracker.model;
 
 import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
-/**
- * Entidad que representa a un entrenador en el sistema.
- * Un entrenador está asociado a un usuario (User) que contiene
- * la información de autenticación y puede tener múltiples miembros (Member)
- * asignados a él.
- */
+import java.math.BigDecimal;
+import java.util.Set;
+import java.util.HashSet;
+
 @Entity
-@Table(name = "trainers")
-@Getter
-@Setter
-@AllArgsConstructor
+@Table(name = "trainers", indexes = {
+        @Index(name = "idx_trainer_user", columnList = "user_id"),
+        @Index(name = "idx_trainer_specialty", columnList = "specialty"),
+        @Index(name = "idx_trainer_active", columnList = "is_active")
+})
+@Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(exclude = {"user", "assignedMembers"}, callSuper = false)
+@ToString(exclude = {"user", "assignedMembers"})
 public class Trainer extends BaseEntity {
 
-
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
+
+    @Column(nullable = false, length = 50)
+    private String firstName;
+
+    @Column(nullable = false, length = 50)
+    private String lastName;
+
     @Column(nullable = false, length = 100)
     private String specialty;
 
-    @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<Member> members = new ArrayList<>();
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String certifications;
+
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal hourlyRate;
+
+    @Column(nullable = false)
+    private Boolean isActive;
+
+    @OneToMany(mappedBy = "assignedTrainer", fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
+    private Set<Member> assignedMembers = new HashSet<>();
+
+    public String getFullName() {
+        return firstName + " " + lastName;
+    }
 
     public void addMember(Member member) {
         if (member != null) {
-            this.members.add(member);
-            member.setTrainer(this);
+            assignedMembers.add(member);
+            member.setAssignedTrainer(this);
         }
     }
 
     public void removeMember(Member member) {
         if (member != null) {
-            this.members.remove(member);
-            member.setTrainer(null);
+            assignedMembers.remove(member);
+            member.setAssignedTrainer(null);
+        }
+    }
+
+    public int getAssignedMembersCount() {
+        return assignedMembers.size();
+    }
+
+    @PrePersist
+    public void prePersist() {
+        super.onCreate();
+        if (isActive == null) {
+            isActive = true;
         }
     }
 }

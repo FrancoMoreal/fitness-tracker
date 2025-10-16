@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -9,7 +10,7 @@
             <column name="username" value="admin"/>
             <column name="password" value="adminpass"/>
             <column name="email" value="admin@example.com"/>
-            <column name="enable" valueBoolean="true"/>
+            <column name="enabled" valueBoolean="true"/>
             <column name="role" value="ADMIN"/>
             <column name="external_id" value="uuid-1"/>
         </insert>
@@ -17,32 +18,41 @@
             <column name="username" value="trainer1"/>
             <column name="password" value="trainerpass"/>
             <column name="email" value="trainer1@example.com"/>
-            <column name="enable" valueBoolean="true"/>
-            <column name="role" value="TRAINER"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="role" value="USER"/>
             <column name="external_id" value="uuid-2"/>
         </insert>
         <insert tableName="users">
             <column name="username" value="member1"/>
             <column name="password" value="memberpass"/>
             <column name="email" value="member1@example.com"/>
-            <column name="enable" valueBoolean="true"/>
-            <column name="role" value="MEMBER"/>
+            <column name="enabled" valueBoolean="true"/>
+            <column name="role" value="USER"/>
             <column name="external_id" value="uuid-3"/>
         </insert>
 
         <insert tableName="trainers">
-            <column name="name" value="Juan Pérez"/>
-            <column name="email" value="trainer1@example.com"/>
+            <column name="first_name" value="Juan"/>
+            <column name="last_name" value="Pérez"/>
             <column name="specialty" value="Fuerza"/>
+            <column name="certifications" value="Certificado Nacional de Entrenador"/>
+            <column name="hourly_rate" valueNumeric="1500.00"/>
+            <column name="is_active" valueBoolean="true"/>
             <column name="user_id" valueNumeric="2"/>
         </insert>
 
         <insert tableName="members">
-            <column name="name" value="Ana Gómez"/>
-            <column name="email" value="member1@example.com"/>
-            <column name="age" valueNumeric="28"/>
+            <column name="first_name" value="Ana"/>
+            <column name="last_name" value="Gómez"/>
+            <column name="phone" value="1122334455"/>
+            <column name="date_of_birth" valueDate="1995-05-10"/>
+            <column name="emergency_contact" value="Maria Gómez"/>
+            <column name="membership_start_date" valueDate="2024-01-01"/>
+            <column name="membership_end_date" valueDate="2024-12-31"/>
             <column name="weight" valueNumeric="65.5"/>
             <column name="height" valueNumeric="1.68"/>
+            <column name="blood_type" value="O+"/>
+            <column name="is_active" valueBoolean="true"/>
             <column name="user_id" valueNumeric="3"/>
             <column name="trainer_id" valueNumeric="1"/>
         </insert>

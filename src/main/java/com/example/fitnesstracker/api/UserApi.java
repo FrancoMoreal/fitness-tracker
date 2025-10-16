@@ -46,3 +46,4 @@ public interface UserApi {
     @DeleteMapping("/{id}/permanent")
     ResponseEntity<Void> permanentlyDeleteUser(@PathVariable Long id);
 }
+// Agregar posibles response codes y descripciones en la documentación de Swagger si es necesario.

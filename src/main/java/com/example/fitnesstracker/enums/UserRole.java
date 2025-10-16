@@ -1,7 +1,8 @@
 package com.example.fitnesstracker.enums;
 
 public enum UserRole {
-    MEMBER("Miembro"), ADMIN("Administrador"), TRAINER("Entrenador");
+    ADMIN("Administrador del sistema"),
+    USER("Usuario regular");
 
     private final String displayName;
 
@@ -13,20 +14,11 @@ public enum UserRole {
         return displayName;
     }
 
-    /**
-     * Método útil para obtener el rol por su nombre
-     * Lanza IllegalArgumentException si el rol no existe
-     */
-    public static UserRole fromString(String role) {
-        if (role == null) {
-            return MEMBER; // Valor por defecto
-        }
+    public boolean isAdmin() {
+        return this == ADMIN;
+    }
 
-        try {
-            return UserRole.valueOf(role.toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(
-                    "Rol inválido: " + role + ". Los roles válidos son: USER, ADMIN, TRAINER");
-        }
+    public boolean isUser() {
+        return this == USER;
     }
 }

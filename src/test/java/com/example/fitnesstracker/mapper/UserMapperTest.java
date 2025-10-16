@@ -29,8 +29,8 @@ class UserMapperTest {
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
-        testUser.setEnable(true);
-        testUser.setRole(UserRole.MEMBER);
+        testUser.setEnabled(true);
+        testUser.setRole(UserRole.USER);
     }
 
     @Test
@@ -45,7 +45,7 @@ class UserMapperTest {
         assertThat(result.getUsername()).isEqualTo("testuser");
         assertThat(result.getEmail()).isEqualTo("test@example.com");
         assertThat(result.getEnable()).isTrue();
-        assertThat(result.getRole()).isEqualTo(UserRole.MEMBER);
+        assertThat(result.getRole()).isEqualTo(UserRole.USER);
     }
 
     @Test
@@ -115,7 +115,7 @@ class UserMapperTest {
         assertThat(testUser.getUsername()).isEqualTo("updateduser");
         assertThat(testUser.getEmail()).isEqualTo("updated@example.com");
         assertThat(testUser.getRole()).isEqualTo(UserRole.ADMIN);
-        assertThat(testUser.getEnable()).isFalse();
+        assertThat(testUser.getEnabled()).isFalse();
         assertThat(testUser.getId()).isEqualTo(1L); // ID no debe cambiar
     }
 
@@ -137,7 +137,7 @@ class UserMapperTest {
         assertThat(testUser.getUsername()).isEqualTo(originalUsername);
         assertThat(testUser.getEmail()).isEqualTo(originalEmail);
         assertThat(testUser.getRole()).isEqualTo(originalRole);
-        assertThat(testUser.getEnable()).isFalse(); // Solo este cambió
+        assertThat(testUser.getEnabled()).isFalse(); // Solo este cambió
     }
 
     @Test

@@ -69,8 +69,8 @@ class UserServiceTest {
         testUser.setUsername("testuser");
         testUser.setEmail("test@example.com");
         testUser.setPassword("encodedPassword");
-        testUser.setEnable(true);
-        testUser.setRole(UserRole.MEMBER);
+        testUser.setEnabled(true);
+        testUser.setRole(UserRole.USER);
 
         testUserDTO = new UserDTO();
         testUserDTO.setId(1L);
@@ -78,7 +78,7 @@ class UserServiceTest {
         testUserDTO.setUsername("testuser");
         testUserDTO.setEmail("test@example.com");
         testUserDTO.setEnable(true);
-        testUserDTO.setRole(UserRole.MEMBER);
+        testUserDTO.setRole(UserRole.USER);
 
         testRegisterDTO = new UserRegisterDTO();
         testRegisterDTO.setUsername("newuser");
@@ -343,16 +343,16 @@ class UserServiceTest {
     @DisplayName("getUsersByRole - Debería filtrar usuarios por rol")
     void getUsersByRole_Success() {
         // Arrange
-        when(userRepository.findByRole(UserRole.MEMBER)).thenReturn(Arrays.asList(testUser));
+        when(userRepository.findByRole(UserRole.USER)).thenReturn(Arrays.asList(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
         // Act
-        List<UserDTO> result = userService.getUsersByRole(UserRole.MEMBER);
+        List<UserDTO> result = userService.getUsersByRole(UserRole.USER);
 
         // Assert
         assertThat(result).hasSize(1);
-        assertThat(result.get(0).getRole()).isEqualTo(UserRole.MEMBER);
-        verify(userRepository).findByRole(UserRole.MEMBER);
+        assertThat(result.get(0).getRole()).isEqualTo(UserRole.USER);
+        verify(userRepository).findByRole(UserRole.USER);
     }
 
     // ==================== UPDATE USER TESTS ====================

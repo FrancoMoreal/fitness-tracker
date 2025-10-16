@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <databaseChangeLog
         xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -15,10 +16,10 @@
             <column name="password" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="email" type="VARCHAR(255)">
+            <column name="email" type="VARCHAR(100)">
                 <constraints nullable="false" unique="true"/>
             </column>
-            <column name="enable" type="BOOLEAN" defaultValueBoolean="true">
+            <column name="enabled" type="BOOLEAN" defaultValueBoolean="true">
                 <constraints nullable="false"/>
             </column>
             <column name="role" type="VARCHAR(20)">
@@ -34,15 +35,26 @@
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="VARCHAR(255)">
+            <column name="first_name" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="email" type="VARCHAR(255)">
+            <column name="last_name" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="specialty" type="VARCHAR(255)"/>
+            <column name="specialty" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="certifications" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="hourly_rate" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
             <column name="user_id" type="BIGINT">
-                <constraints unique="true"/>
+                <constraints unique="true" nullable="false"/>
             </column>
         </createTable>
         <addForeignKeyConstraint baseTableName="trainers" baseColumnNames="user_id"
@@ -53,17 +65,33 @@
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
-            <column name="name" type="VARCHAR(255)">
+            <column name="first_name" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="email" type="VARCHAR(255)">
+            <column name="last_name" type="VARCHAR(50)">
                 <constraints nullable="false"/>
             </column>
-            <column name="age" type="INT"/>
+            <column name="phone" type="VARCHAR(20)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="date_of_birth" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="emergency_contact" type="VARCHAR(255)"/>
+            <column name="membership_start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="membership_end_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
             <column name="weight" type="DOUBLE"/>
             <column name="height" type="DOUBLE"/>
+            <column name="blood_type" type="VARCHAR(3)"/>
+            <column name="is_active" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
             <column name="user_id" type="BIGINT">
-                <constraints unique="true"/>
+                <constraints unique="true" nullable="false"/>
             </column>
             <column name="trainer_id" type="BIGINT"/>
         </createTable>
@@ -87,8 +115,8 @@
         <createIndex tableName="users" indexName="idx_users_deleted_at">
             <column name="deleted_at"/>
         </createIndex>
-        <createIndex tableName="users" indexName="idx_users_enable">
-            <column name="enable"/>
+        <createIndex tableName="users" indexName="idx_users_enabled">
+            <column name="enabled"/>
         </createIndex>
     </changeSet>
 </databaseChangeLog>
