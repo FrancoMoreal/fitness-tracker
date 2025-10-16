@@ -55,4 +55,8 @@ public class GlobalExceptionHandler {
                 request.getDescription(false).replace("uri=", ""));
         return new ResponseEntity<>(response, status);
     }
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ErrorResponse> handleUnauthorizedException(UnauthorizedException ex, WebRequest request) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Unauthorized", ex.getMessage(), request);
+    }
 }
