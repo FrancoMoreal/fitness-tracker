@@ -1,3 +1,4 @@
+// java
 package com.example.fitnesstracker.config;
 
 import com.example.fitnesstracker.security.CustomUserDetailsService;
@@ -51,9 +52,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
                                 "/api-docs/**", "/swagger-resources/**", "/webjars/**"
                         ).permitAll()
-                        .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/*/permanent").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("ADMIN", "TRAINER")
+                        // Hacer público el registro y login bajo /auth/**
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*/permanent").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("ADMIN", "TRAINER")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

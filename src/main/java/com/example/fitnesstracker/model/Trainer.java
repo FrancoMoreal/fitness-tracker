@@ -9,17 +9,15 @@ import java.util.Set;
 import java.util.HashSet;
 
 @Entity
-@Table(name = "trainers", indexes = {
-        @Index(name = "idx_trainer_user", columnList = "user_id"),
+@Table(name = "trainers", indexes = { @Index(name = "idx_trainer_user", columnList = "user_id"),
         @Index(name = "idx_trainer_specialty", columnList = "specialty"),
-        @Index(name = "idx_trainer_active", columnList = "is_active")
-})
+        @Index(name = "idx_trainer_active", columnList = "is_active") })
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@EqualsAndHashCode(exclude = {"user", "assignedMembers"}, callSuper = false)
-@ToString(exclude = {"user", "assignedMembers"})
+@EqualsAndHashCode(exclude = { "user", "assignedMembers" }, callSuper = false)
+@ToString(exclude = { "user", "assignedMembers" })
 public class Trainer extends BaseEntity {
 
     @OneToOne(fetch = FetchType.EAGER)
@@ -44,6 +42,7 @@ public class Trainer extends BaseEntity {
     @Column(nullable = false)
     private Boolean isActive;
 
+    @Builder.Default
     @OneToMany(mappedBy = "assignedTrainer", fetch = FetchType.LAZY, cascade = CascadeType.REFRESH)
     private Set<Member> assignedMembers = new HashSet<>();
 
@@ -52,21 +51,28 @@ public class Trainer extends BaseEntity {
     }
 
     public void addMember(Member member) {
-        if (member != null) {
-            assignedMembers.add(member);
-            member.setAssignedTrainer(this);
+        if (member == null)
+            return;
+        if (assignedMembers == null) {
+            assignedMembers = new HashSet<>();
         }
+        assignedMembers.add(member);
+        member.setAssignedTrainer(this);
     }
 
     public void removeMember(Member member) {
-        if (member != null) {
+        if (member == null)
+            return;
+        if (assignedMembers != null) {
             assignedMembers.remove(member);
+        }
+        if (member != null) {
             member.setAssignedTrainer(null);
         }
     }
 
     public int getAssignedMembersCount() {
-        return assignedMembers.size();
+        return assignedMembers == null ? 0 : assignedMembers.size();
     }
 
     @PrePersist

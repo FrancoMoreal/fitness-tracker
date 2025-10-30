@@ -1,3 +1,4 @@
+// java
 package com.example.fitnesstracker.security;
 
 import jakarta.servlet.FilterChain;
@@ -26,6 +27,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         try {
+            String authHeader = request.getHeader("Authorization");
+            log.debug("Authorization header: {}", authHeader);
             String jwt = extractJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
@@ -40,6 +43,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
                 log.debug("Usuario autenticado: {}", username);
+            } else {
+                log.debug("No se encontró token válido en la petición");
             }
         } catch (Exception ex) {
             log.error("No se pudo establecer la autenticación: {}", ex.getMessage());
@@ -54,8 +59,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private String extractJwtFromRequest(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
-        return (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer "))
-                ? bearerToken.substring(7)
-                : null;
+        if (!StringUtils.hasText(bearerToken)) {
+            return null;
+        }
+        // Aceptar tanto "Bearer <token>" como el token puro (útil para Swagger)
+        if (bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return bearerToken.trim();
     }
 }

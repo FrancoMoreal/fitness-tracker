@@ -1,0 +1,203 @@
+<!-- xml -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- USERS -->
+    <changeSet id="V3-01-add-external-id-users" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="external_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="users">
+            <column name="external_id" type="varchar(36)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="external_id"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-02-add-created-at-users" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="created_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="users">
+            <column name="created_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="created_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-03-add-updated-at-users" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="updated_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="users">
+            <column name="updated_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="updated_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-04-add-deleted-at-users" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="deleted_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="users">
+            <column name="deleted_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="users" columnName="deleted_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- MEMBERS -->
+    <changeSet id="V3-05-add-external-id-members" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="members" columnName="external_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="members">
+            <column name="external_id" type="varchar(36)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="members" columnName="external_id"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-06-add-created-at-members" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="members" columnName="created_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="members">
+            <column name="created_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="members" columnName="created_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-07-add-updated-at-members" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="members" columnName="updated_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="members">
+            <column name="updated_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="members" columnName="updated_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-08-add-deleted-at-members" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="members" columnName="deleted_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="members">
+            <column name="deleted_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="members" columnName="deleted_at"/>
+        </rollback>
+    </changeSet>
+
+    <!-- TRAINERS -->
+    <changeSet id="V3-09-add-external-id-trainers" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="trainers" columnName="external_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="trainers">
+            <column name="external_id" type="varchar(36)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="trainers" columnName="external_id"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-10-add-created-at-trainers" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="trainers" columnName="created_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="trainers">
+            <column name="created_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="trainers" columnName="created_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-11-add-updated-at-trainers" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="trainers" columnName="updated_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="trainers">
+            <column name="updated_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="trainers" columnName="updated_at"/>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="V3-12-add-deleted-at-trainers" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="trainers" columnName="deleted_at"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="trainers">
+            <column name="deleted_at" type="datetime">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+        <rollback>
+            <dropColumn tableName="trainers" columnName="deleted_at"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

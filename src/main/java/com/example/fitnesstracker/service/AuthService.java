@@ -58,7 +58,7 @@ public class AuthService {
 
         log.info("Login exitoso para usuario: {}", username);
 
-        // Mapear User a UserDTO (usar método correcto: toDto)
+        // Mapear User a UserDTO
         UserDTO userDTO = userMapper.toDto(user);
 
         // Mapear Member o Trainer si existe

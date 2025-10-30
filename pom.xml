@@ -29,6 +29,8 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -60,7 +62,7 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
-    
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -101,13 +103,13 @@
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
             <version>0.12.3</version>
-            <scope>runtime</scope>
+
         </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.3</version>
-            <scope>runtime</scope>
+
         </dependency>
         <!-- Para usar AssertJ (assertions modernas) -->
         <dependency>

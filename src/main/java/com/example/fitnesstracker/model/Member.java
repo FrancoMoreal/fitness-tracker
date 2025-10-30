@@ -35,8 +35,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column
-    private String emergencyContact;
 
     @Column(nullable = false)
     private LocalDate membershipStartDate;
@@ -53,9 +51,6 @@ public class Member extends BaseEntity {
 
     @Column
     private Double weight;
-
-    @Column(length = 3)
-    private String bloodType;
 
     @Column
     private Boolean isActive;

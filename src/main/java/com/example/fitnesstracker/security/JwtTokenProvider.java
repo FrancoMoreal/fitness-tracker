@@ -3,7 +3,11 @@ package com.example.fitnesstracker.security;
 import com.example.fitnesstracker.exception.UserNotFoundException;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.UserRepository;
-import io.jsonwebtoken.*;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,32 +39,30 @@ public class JwtTokenProvider {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + username));
 
-        return Jwts.builder()
-                .subject(username)
-                .claim("role", user.getRole().name())
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key, Jwts.SIG.HS512)
-                .compact();
+        String token = Jwts.builder().setSubject(username).claim("role", user.getRole().name()).setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(key, SignatureAlgorithm.HS512).compact();
+
+        //  SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
+        Claims claims = Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return token;
     }
 
     public String getUsernameFromToken(String token) {
         SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+        Claims claims = Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        return claims.getSubject();
     }
 
     public boolean validateToken(String token) {
         try {
             SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            Jwts.parser().setSigningKey(key).build().parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException ex) {
+            logger.error("Token expirado: {}", ex.getMessage());
         } catch (JwtException | IllegalArgumentException ex) {
-            logger.error("Error al validar el token JWT: {}", ex.getMessage());
+            logger.error("Token inválido: {}", ex.getMessage());
         }
         return false;
     }
