@@ -4,22 +4,25 @@ import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.Period;
 
 @Entity
 @Table(name = "members", indexes = {
         @Index(name = "idx_member_user", columnList = "user_id"),
         @Index(name = "idx_member_trainer", columnList = "trainer_id"),
-        @Index(name = "idx_member_phone", columnList = "phone")
+        @Index(name = "idx_member_phone", columnList = "phone"),
+        @Index(name = "idx_member_membership_end", columnList = "membership_end_date")
 })
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 @EqualsAndHashCode(exclude = {"user", "assignedTrainer"}, callSuper = false)
 @ToString(exclude = {"user", "assignedTrainer"})
 public class Member extends BaseEntity {
 
-    @OneToOne(fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
@@ -35,7 +38,6 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 
-
     @Column(nullable = false)
     private LocalDate membershipStartDate;
 
@@ -46,16 +48,47 @@ public class Member extends BaseEntity {
     @JoinColumn(name = "trainer_id")
     private Trainer assignedTrainer;
 
-    @Column
+    @Column(precision = 5, scale = 2)
     private Double height;
 
-    @Column
+    @Column(precision = 5, scale = 2)
     private Double weight;
 
-    @Column
-    private Boolean isActive;
-
+    // ========== Helper Methods ==========
     public String getFullName() {
         return firstName + " " + lastName;
+    }
+
+    /**
+     * Calcula la edad actual
+     */
+    public Integer getAge() {
+        if (dateOfBirth == null) return null;
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
+    }
+
+    /**
+     * Calcula el IMC (Índice de Masa Corporal)
+     */
+    public Double calculateBMI() {
+        if (weight == null || height == null || height == 0) {
+            return null;
+        }
+        return weight / (height * height);
+    }
+
+    /**
+     * Verifica si la membresía está vigente
+     */
+    public boolean isMembershipActive() {
+        if (membershipEndDate == null) return false;
+        return !LocalDate.now().isAfter(membershipEndDate) && this.isActive();
+    }
+
+    /**
+     * Verifica si tiene trainer asignado
+     */
+    public boolean hasTrainer() {
+        return assignedTrainer != null && assignedTrainer.isActive();
     }
 }

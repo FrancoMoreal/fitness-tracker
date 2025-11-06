@@ -4,6 +4,7 @@ public enum UserRole {
     ADMIN("Administrador del sistema"),
     USER("Usuario regular");
 
+
     private final String displayName;
 
     UserRole(String displayName) {

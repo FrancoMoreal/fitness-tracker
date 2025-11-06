@@ -1,7 +1,8 @@
 package com.example.fitnesstracker.model;
 
-import com.example.fitnesstracker.model.common.BaseEntity;
 import com.example.fitnesstracker.enums.UserRole;
+import com.example.fitnesstracker.enums.UserType;
+import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -14,12 +15,15 @@ import java.util.List;
 @Entity
 @Table(name = "users", indexes = {
         @Index(name = "idx_user_username", columnList = "username"),
-        @Index(name = "idx_user_email", columnList = "email")
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_type", columnList = "user_type"),
+        @Index(name = "idx_user_enabled", columnList = "enabled")
 })
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 @EqualsAndHashCode(exclude = {"member", "trainer"}, callSuper = false)
 @ToString(exclude = {"member", "trainer"})
 public class User extends BaseEntity implements UserDetails {
@@ -33,34 +37,31 @@ public class User extends BaseEntity implements UserDetails {
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
+    @Builder.Default
     @Column(nullable = false)
-    private Boolean enabled;
+    private Boolean enabled = true;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private UserRole role;
+    @Column(nullable = false, length = 20)
+    private UserRole role = UserRole.USER;
 
-    // ========== Relaciones Opcionales ==========
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Builder.Default
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_type", nullable = false, length = 20)
+    private UserType userType = UserType.NONE;
+
+    // ========== Relaciones Opcionales (Lazy) ==========
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Member member;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private Trainer trainer;
 
     // ========== UserDetails Implementation ==========
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.name()));
-    }
-
-    @Override
-    public String getPassword() {
-        return this.password;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.username;
     }
 
     @Override
@@ -93,11 +94,28 @@ public class User extends BaseEntity implements UserDetails {
     }
 
     public boolean isMember() {
-        return this.member != null && this.member.getIsActive();
+        return this.userType == UserType.MEMBER && this.member != null;
     }
 
     public boolean isTrainer() {
-        return this.trainer != null && this.trainer.getIsActive();
+        return this.userType == UserType.TRAINER && this.trainer != null;
+    }
+
+    public boolean hasProfile() {
+        return this.userType != UserType.NONE;
+    }
+
+    /**
+     * Obtiene el nombre completo del perfil asociado
+     */
+    public String getFullName() {
+        if (isMember() && member != null) {
+            return member.getFullName();
+        }
+        if (isTrainer() && trainer != null) {
+            return trainer.getFullName();
+        }
+        return username;
     }
 
     @PrePersist
@@ -108,6 +126,9 @@ public class User extends BaseEntity implements UserDetails {
         }
         if (this.role == null) {
             this.role = UserRole.USER;
+        }
+        if (this.userType == null) {
+            this.userType = UserType.NONE;
         }
     }
 }

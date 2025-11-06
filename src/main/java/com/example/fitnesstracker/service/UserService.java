@@ -4,6 +4,7 @@ import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.dto.request.UserRegisterDTO;
 import com.example.fitnesstracker.dto.request.UserUpdateDTO;
+import com.example.fitnesstracker.enums.UserType;
 import com.example.fitnesstracker.security.JwtTokenProvider;
 import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
@@ -13,6 +14,7 @@ import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -23,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -61,6 +64,22 @@ public class UserService {
                 .token(token)
                 .user(userMapper.toDto(user))
                 .build();
+    }
+
+    @Transactional
+    public User createUserWithType(String username, String email, String password, UserType userType) {
+        log.debug("Creando usuario con tipo: {}", userType);
+
+        User user = User.builder()
+                .username(username)
+                .email(email)
+                .password(passwordEncoder.encode(password))
+                .role(UserRole.USER)
+                .userType(userType)
+                .enabled(true)
+                .build();
+
+        return userRepository.save(user);
     }
 
     @Transactional(readOnly = true)
@@ -134,6 +153,21 @@ public class UserService {
                 .stream()
                 .map(userMapper::toDto)
                 .toList();
+    }
+
+    @Transactional
+    public User createUser(String username, String email, String password) {
+        return createUserWithType(username, email, password, UserType.NONE);
+    }
+
+    public void validateUniqueEmailAndUsername(String username, String email) {
+        if (userRepository.existsByUsernameAndDeletedAtIsNull(username)) {
+            throw new UserAlreadyExistsException("username", username);
+        }
+
+        if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
+            throw new UserAlreadyExistsException("email", email);
+        }
     }
 
     private void validateUserRegistration(UserRegisterDTO userRegisterDTO) {

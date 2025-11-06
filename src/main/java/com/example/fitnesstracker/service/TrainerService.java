@@ -4,11 +4,9 @@ import com.example.fitnesstracker.dto.request.trainer.RegisterTrainerDTO;
 import com.example.fitnesstracker.dto.request.trainer.UpdateTrainerDTO;
 import com.example.fitnesstracker.dto.response.TrainerDTO;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
-import com.example.fitnesstracker.exception.UserAlreadyExistsException;
 import com.example.fitnesstracker.mapper.TrainerMapper;
 import com.example.fitnesstracker.model.Trainer;
 import com.example.fitnesstracker.model.User;
-import com.example.fitnesstracker.enums.UserRole;
 import com.example.fitnesstracker.repository.TrainerRepository;
 import com.example.fitnesstracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,39 +29,25 @@ public class TrainerService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TrainerMapper trainerMapper;
+    private final UserService userService;
 
     @Transactional
     public TrainerDTO registerTrainer(RegisterTrainerDTO dto) {
-        log.info("Registrando nuevo entrenador: {}", dto.getUsername());
+//        Principios SOLID, basicamente que una funcion haga una sola cosa
+        userService.validateUniqueEmailAndUsername(dto.getUsername(), dto.getPassword());
 
-        // Validar que username no exista
-        if (userRepository.existsByUsernameAndDeletedAtIsNull(dto.getUsername())) {
-            throw new UserAlreadyExistsException("username", dto.getUsername());
-        }
+        User user = userService.createUser(dto.getUsername(), dto.getEmail(), dto.getPassword());
 
-        // Validar que email no exista
-        if (userRepository.existsByEmailAndDeletedAtIsNull(dto.getEmail())) {
-            throw new UserAlreadyExistsException("email", dto.getEmail());
-        }
+        Trainer trainer = createFromTrainerDto(user, dto);
 
-        // Crear User
-        User user = User.builder()
-                .username(dto.getUsername())
-                .email(dto.getEmail())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .role(UserRole.USER)
-                .enabled(true)
-                .build();
+        return trainerMapper.toDTO(trainer);
+    }
 
-        User savedUser = userRepository.save(user);
-        log.debug("Usuario creado: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
-
-        // Convertir certifications a String
+    private Trainer createFromTrainerDto(User user, RegisterTrainerDTO dto) {
         String certificationsStr = String.join(",", dto.getCertifications());
 
-        // Crear Trainer
         Trainer trainer = Trainer.builder()
-                .user(savedUser)
+                .user(user)
                 .firstName(dto.getFirstName())
                 .lastName(dto.getLastName())
                 .specialty(dto.getSpecialty())
@@ -72,13 +56,7 @@ public class TrainerService {
                 .isActive(true)
                 .build();
 
-        Trainer savedTrainer = trainerRepository.save(trainer);
-        savedUser.setTrainer(savedTrainer);
-        userRepository.save(savedUser);
-
-        log.info("Entrenador registrado exitosamente: {} (ID: {})", savedTrainer.getFullName(), savedTrainer.getId());
-
-        return trainerMapper.toDTO(savedTrainer);
+        return trainerRepository.save(trainer);
     }
 
     public TrainerDTO getTrainerById(Long trainerId) {
