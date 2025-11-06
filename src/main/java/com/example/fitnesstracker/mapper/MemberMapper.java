@@ -28,7 +28,7 @@ public class MemberMapper {
                 .phone(entity.getPhone()).dateOfBirth(entity.getDateOfBirth())
                 .membershipStartDate(entity.getMembershipStartDate()).membershipEndDate(entity.getMembershipEndDate())
                 .remainingDays(remainingDays).height(entity.getHeight()).weight(entity.getWeight())
-                .isActive(entity.getIsActive())
+                .isActive(entity.isActive())
                 .assignedTrainerId(entity.getAssignedTrainer() != null ? entity.getAssignedTrainer().getId() : null)
                 .build();
     }
@@ -62,6 +62,6 @@ public class MemberMapper {
         if (dto.getWeight() != null) {
             entity.setWeight(dto.getWeight());
         }
-        // No tocar assignedTrainer, id ni campos de auditoría aquí
+
     }
 }

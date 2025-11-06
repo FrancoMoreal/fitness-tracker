@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.21.xsd">
+
+    <changeSet id="V6-create-trainer-assignment-requests" author="FrancoMoreal">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="trainer_assignment_requests"/>
+            </not>
+        </preConditions>
+
+        <createTable tableName="trainer_assignment_requests">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="member_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="trainer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="requested_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="responded_at" type="TIMESTAMP"/>
+
+            <column name="member_message" type="VARCHAR(500)"/>
+            <column name="trainer_response" type="VARCHAR(500)"/>
+
+            <column name="deleted_at" type="TIMESTAMP"/>
+            <column name="external_id" type="VARCHAR(36)"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="trainer_assignment_requests" baseColumnNames="member_id"
+                                 referencedTableName="members" referencedColumnNames="id"
+                                 constraintName="fk_assignment_member"/>
+
+        <addForeignKeyConstraint baseTableName="trainer_assignment_requests" baseColumnNames="trainer_id"
+                                 referencedTableName="trainers" referencedColumnNames="id"
+                                 constraintName="fk_assignment_trainer"/>
+
+        <createIndex tableName="trainer_assignment_requests" indexName="idx_assignment_member">
+            <column name="member_id"/>
+        </createIndex>
+
+        <createIndex tableName="trainer_assignment_requests" indexName="idx_assignment_trainer">
+            <column name="trainer_id"/>
+        </createIndex>
+
+        <createIndex tableName="trainer_assignment_requests" indexName="idx_assignment_status">
+            <column name="status"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_assignment_status" tableName="trainer_assignment_requests"/>
+            <dropIndex indexName="idx_assignment_trainer" tableName="trainer_assignment_requests"/>
+            <dropIndex indexName="idx_assignment_member" tableName="trainer_assignment_requests"/>
+            <dropForeignKeyConstraint baseTableName="trainer_assignment_requests"
+                                      constraintName="fk_assignment_trainer"/>
+            <dropForeignKeyConstraint baseTableName="trainer_assignment_requests"
+                                      constraintName="fk_assignment_member"/>
+            <dropTable tableName="trainer_assignment_requests"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>

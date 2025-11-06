@@ -1,8 +1,10 @@
 package com.example.fitnesstracker.model;
 
+import com.example.fitnesstracker.enums.AssignmentStatus;
 import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDate;
 import java.time.Period;
 
@@ -44,15 +46,20 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate membershipEndDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private AssignmentStatus assignmentStatus = AssignmentStatus.NO_TRAINER;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trainer_id")
     private Trainer assignedTrainer;
 
-    @Column(precision = 5, scale = 2)
+    @Column
     private Double height;
 
-    @Column(precision = 5, scale = 2)
+    @Column
     private Double weight;
+
 
     // ========== Helper Methods ==========
     public String getFullName() {

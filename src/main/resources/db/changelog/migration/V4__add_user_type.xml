@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- src/main/resources/db/changelog/V4__add_user_type.xml -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.21.xsd">
+
+    <changeSet id="V4-add-user-type" author="FrancoMoreal">
+        <!-- Si la columna ya existe, marcar como aplicado -->
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="users" columnName="user_type"/>
+            </not>
+        </preConditions>
+
+        <addColumn tableName="users">
+            <column name="user_type" type="varchar(20)" defaultValue="NONE">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <createIndex indexName="idx_user_type" tableName="users">
+            <column name="user_type"/>
+        </createIndex>
+
+        <rollback>
+            <dropIndex indexName="idx_user_type" tableName="users"/>
+            <dropColumn tableName="users" columnName="user_type"/>
+        </rollback>
+    </changeSet>
+</databaseChangeLog>
