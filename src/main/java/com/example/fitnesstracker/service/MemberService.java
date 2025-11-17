@@ -14,7 +14,6 @@ import com.example.fitnesstracker.repository.MemberRepository;
 import com.example.fitnesstracker.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +27,11 @@ import java.util.stream.Collectors;
 public class MemberService {
 
     private static final String MEMBER_NOT_FOUND = "Miembro no encontrado";
+    private static final String PHONE_ALREADY_EXISTS = "El teléfono ya está registrado";
+    private static final String UNDERAGE_ERROR = "Debes tener al menos 18 años para registrarte";
 
     private final MemberRepository memberRepository;
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
     private final MemberMapper memberMapper;
     private final UserService userService;
 
@@ -39,55 +39,25 @@ public class MemberService {
     public MemberDTO registerMember(RegisterMemberDTO dto) {
         log.info("Registrando nuevo miembro: {}", dto.getUsername());
 
-        // Validaciones
-        userService.validateUniqueEmailAndUsername(dto.getUsername(), dto.getEmail());
+        validateUniquePhone(dto.getPhone());
+        validateAge(dto.getDateOfBirth());
 
-        if (memberRepository.existsByPhoneAndDeletedAtIsNull(dto.getPhone())) {
-            throw new UserAlreadyExistsException("phone", dto.getPhone());
-        }
-
-        LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
-        if (dto.getDateOfBirth().isAfter(eighteenYearsAgo)) {
-            throw new InvalidUserDataException("dateOfBirth", "Debes tener al menos 18 años para registrarte");
-        }
-
-        // CAMBIO 1: Crear user con UserType.MEMBER
         User savedUser = userService.createUserWithType(
                 dto.getUsername(),
                 dto.getEmail(),
                 dto.getPassword(),
-                UserType.MEMBER  // ← NUEVO
+                UserType.MEMBER
         );
 
         log.debug("Usuario creado: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
 
-        LocalDate membershipStart = LocalDate.now();
-        LocalDate membershipEndDate = membershipStart.plusYears(1);
-
-        // CAMBIO 2: Eliminar isActive (ahora usa BaseEntity.isActive())
-        Member member = Member.builder()
-                .user(savedUser)
-                .firstName(dto.getFirstName())
-                .lastName(dto.getLastName())
-                .phone(dto.getPhone())
-                .dateOfBirth(dto.getDateOfBirth())
-                .membershipStartDate(membershipStart)
-                .membershipEndDate(membershipEndDate)
-                // .isActive(true) ← ELIMINAR, ya no existe
-                .build();
-
+        Member member = createMember(dto, savedUser);
         Member savedMember = memberRepository.save(member);
 
-        // CAMBIO 3: La relación bidireccional se maneja automáticamente
-        // savedUser.setMember(savedMember); ← ELIMINAR si no existe el setter
-        // userRepository.save(savedUser); ← OPCIONAL, ya está guardado
-
         log.info("Miembro registrado exitosamente: {} (ID: {})", savedMember.getFullName(), savedMember.getId());
-
         return memberMapper.toDTO(savedMember);
     }
 
-    // CAMBIO 4: Usar query optimizada con perfil completo
     public MemberDTO getMemberById(Long memberId) {
         log.debug("Buscando miembro por ID: {}", memberId);
         Member member = memberRepository.findByIdWithFullProfile(memberId)
@@ -100,7 +70,6 @@ public class MemberService {
         return memberMapper.toDTO(findExistingMemberByExternalId(externalId));
     }
 
-    // CAMBIO 5: Usar query optimizada para listar
     public List<MemberDTO> getAllMembers() {
         log.debug("Obteniendo todos los miembros activos");
         return memberRepository.findAllActiveWithValidMembership(LocalDate.now())
@@ -115,9 +84,8 @@ public class MemberService {
 
         Member member = findExistingMemberById(memberId);
 
-        if (dto.getPhone() != null && !dto.getPhone().equals(member.getPhone())
-                && memberRepository.existsByPhoneAndDeletedAtIsNull(dto.getPhone())) {
-            throw new UserAlreadyExistsException("phone", dto.getPhone());
+        if (dto.getPhone() != null && !dto.getPhone().equals(member.getPhone())) {
+            validateUniquePhone(dto.getPhone());
         }
 
         memberMapper.updateFromDTO(dto, member);
@@ -132,14 +100,10 @@ public class MemberService {
         log.info("Eliminando miembro: {}", memberId);
 
         Member member = findExistingMemberById(memberId);
-
         member.softDelete();
         member.getUser().softDelete();
 
-        // CAMBIO 6: Solo guardar member (cascade maneja user)
         memberRepository.save(member);
-        // userRepository.save(member.getUser()); ← OPCIONAL, cascade lo hace
-
         log.info("Miembro eliminado exitosamente: {}", memberId);
     }
 
@@ -157,7 +121,6 @@ public class MemberService {
         log.info("Miembro restaurado exitosamente: {}", memberId);
     }
 
-    // CAMBIO 7: Usar query optimizada con User cargado
     public List<MemberDTO> getMembersByTrainer(Long trainerId) {
         log.debug("Obteniendo miembros del entrenador: {}", trainerId);
         return memberRepository.findActiveByTrainerIdWithUser(trainerId)
@@ -176,7 +139,6 @@ public class MemberService {
                 .collect(Collectors.toList());
     }
 
-    // NUEVO: Buscar members sin trainer
     public List<MemberDTO> getUnassignedMembers() {
         log.debug("Obteniendo miembros sin entrenador asignado");
         return memberRepository.findUnassignedActiveMembers(LocalDate.now())
@@ -185,7 +147,6 @@ public class MemberService {
                 .collect(Collectors.toList());
     }
 
-    // NUEVO: Buscar members por nombre
     public List<MemberDTO> searchMembers(String searchTerm) {
         log.debug("Buscando miembros por nombre: {}", searchTerm);
         return memberRepository.searchByName(searchTerm)
@@ -194,22 +155,44 @@ public class MemberService {
                 .collect(Collectors.toList());
     }
 
-    /* Helpers */
-    private Member findExistingMemberById(Long memberId) {
-        Member member = memberRepository.findById(memberId)
-                .orElseThrow(() -> new ResourceNotFoundException(MEMBER_NOT_FOUND));
-        if (member.isDeleted()) {
-            throw new ResourceNotFoundException(MEMBER_NOT_FOUND);
+    /* Métodos privados reutilizables */
+    private void validateUniquePhone(String phone) {
+        if (memberRepository.existsByPhoneAndDeletedAtIsNull(phone)) {
+            throw new UserAlreadyExistsException("phone", PHONE_ALREADY_EXISTS);
         }
-        return member;
+    }
+
+    private void validateAge(LocalDate dateOfBirth) {
+        LocalDate eighteenYearsAgo = LocalDate.now().minusYears(18);
+        if (dateOfBirth.isAfter(eighteenYearsAgo)) {
+            throw new InvalidUserDataException("dateOfBirth", UNDERAGE_ERROR);
+        }
+    }
+
+    private Member createMember(RegisterMemberDTO dto, User savedUser) {
+        LocalDate membershipStart = LocalDate.now();
+        LocalDate membershipEndDate = membershipStart.plusYears(1);
+
+        return Member.builder()
+                .user(savedUser)
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .phone(dto.getPhone())
+                .dateOfBirth(dto.getDateOfBirth())
+                .membershipStartDate(membershipStart)
+                .membershipEndDate(membershipEndDate)
+                .build();
+    }
+
+    private Member findExistingMemberById(Long memberId) {
+        return memberRepository.findById(memberId)
+                .filter(member -> !member.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException(MEMBER_NOT_FOUND));
     }
 
     private Member findExistingMemberByExternalId(String externalId) {
-        Member member = memberRepository.findByExternalId(externalId)
+        return memberRepository.findByExternalId(externalId)
+                .filter(member -> !member.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException(MEMBER_NOT_FOUND));
-        if (member.isDeleted()) {
-            throw new ResourceNotFoundException(MEMBER_NOT_FOUND);
-        }
-        return member;
     }
 }

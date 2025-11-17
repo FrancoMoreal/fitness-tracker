@@ -30,6 +30,11 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserService {
 
+    private static final String USER_NOT_FOUND = "Usuario no encontrado";
+    private static final String USERNAME_ALREADY_EXISTS = "El nombre de usuario ya está registrado";
+    private static final String EMAIL_ALREADY_EXISTS = "El email ya está registrado";
+    private static final String INVALID_PASSWORD = "La contraseña debe tener al menos 6 caracteres";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
@@ -38,6 +43,7 @@ public class UserService {
 
     @Transactional
     public UserDTO registerUser(UserRegisterDTO userRegisterDTO) {
+        log.info("Registrando nuevo usuario: {}", userRegisterDTO.getUsername());
         validateUserRegistration(userRegisterDTO);
 
         User user = userMapper.toEntity(userRegisterDTO);
@@ -45,10 +51,13 @@ public class UserService {
         user.setRole(UserRole.USER);
         user.setEnabled(true);
 
-        return userMapper.toDto(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        log.info("Usuario registrado exitosamente: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
+        return userMapper.toDto(savedUser);
     }
 
     public AuthResponse login(String username, String rawPassword) {
+        log.info("Iniciando sesión para el usuario: {}", username);
         validateLoginCredentials(username, rawPassword);
 
         Authentication authentication = authenticationManager.authenticate(
@@ -58,8 +67,9 @@ public class UserService {
 
         String token = jwtTokenProvider.generateToken(username);
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con username: " + username));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
+        log.info("Inicio de sesión exitoso para el usuario: {}", username);
         return AuthResponse.builder()
                 .token(token)
                 .user(userMapper.toDto(user))
@@ -69,6 +79,7 @@ public class UserService {
     @Transactional
     public User createUserWithType(String username, String email, String password, UserType userType) {
         log.debug("Creando usuario con tipo: {}", userType);
+        validateUniqueEmailAndUsername(username, email);
 
         User user = User.builder()
                 .username(username)
@@ -84,6 +95,7 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsers() {
+        log.debug("Obteniendo todos los usuarios activos");
         return userRepository.findAllActive()
                 .stream()
                 .map(userMapper::toDto)
@@ -92,49 +104,43 @@ public class UserService {
 
     @Transactional(readOnly = true)
     public UserDTO getUserById(Long id) {
+        log.debug("Buscando usuario por ID: {}", id);
         return userMapper.toDto(userRepository.findByIdActive(id)
-                .orElseThrow(() -> new UserNotFoundException(id)));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND)));
     }
 
     @Transactional(readOnly = true)
     public UserDTO getUserByExternalId(String externalId) {
-        return userMapper.toDto(userRepository.findByExternalId(externalId)
-                .orElseThrow(() -> new UserNotFoundException("No se encontró usuario con external ID: " + externalId)));
+        log.debug("Buscando usuario por externalId: {}", externalId);
+        User user = userRepository.findByExternalIdAndDeletedAtIsNull(externalId)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+        return userMapper.toDto(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserDTO> getUsersByRole(UserRole role) {
+        log.debug("Buscando usuarios con rol: {}", role);
+        return userRepository.findByRoleAndDeletedAtIsNull(role)
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 
     @Transactional
     public void deleteUser(Long id) {
+        log.info("Eliminando usuario con ID: {}", id);
         User user = userRepository.findByIdActive(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
         user.softDelete();
         userRepository.save(user);
-    }
-
-    @Transactional
-    public UserDTO restoreUser(Long id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
-
-        if (user.isActive()) {
-            throw new InvalidUserDataException("El usuario no está eliminado");
-        }
-
-        user.restore();
-        return userMapper.toDto(userRepository.save(user));
-    }
-
-    @Transactional
-    public void permanentlyDeleteUser(Long id) {
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException(id);
-        }
-        userRepository.deleteById(id);
+        log.info("Usuario eliminado exitosamente: {}", id);
     }
 
     @Transactional
     public UserDTO updateUser(Long id, UserUpdateDTO userUpdateDTO) {
+        log.info("Actualizando usuario con ID: {}", id);
         User existingUser = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException(id));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
         validateUserUpdate(existingUser, userUpdateDTO);
 
@@ -144,29 +150,39 @@ public class UserService {
             existingUser.setPassword(passwordEncoder.encode(userUpdateDTO.getPassword()));
         }
 
-        return userMapper.toDto(userRepository.save(existingUser));
-    }
-
-    @Transactional(readOnly = true)
-    public List<UserDTO> getUsersByRole(UserRole role) {
-        return userRepository.findByRole(role)
-                .stream()
-                .map(userMapper::toDto)
-                .toList();
+        User updatedUser = userRepository.save(existingUser);
+        log.info("Usuario actualizado exitosamente: {}", id);
+        return userMapper.toDto(updatedUser);
     }
 
     @Transactional
-    public User createUser(String username, String email, String password) {
-        return createUserWithType(username, email, password, UserType.NONE);
+    public UserDTO restoreUser(Long id) {
+        log.info("Restaurando usuario con ID: {}", id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+        user.restore();
+        User restoredUser = userRepository.save(user);
+        log.info("Usuario restaurado exitosamente: {}", id);
+        return userMapper.toDto(restoredUser);
     }
 
-    public void validateUniqueEmailAndUsername(String username, String email) {
+    @Transactional
+    public void permanentlyDeleteUser(Long id) {
+        log.info("Eliminando usuario permanentemente con ID: {}", id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+        userRepository.delete(user);
+        log.info("Usuario eliminado permanentemente: {}", id);
+    }
+
+    /* Métodos privados reutilizables */
+    protected void validateUniqueEmailAndUsername(String username, String email) {
         if (userRepository.existsByUsernameAndDeletedAtIsNull(username)) {
-            throw new UserAlreadyExistsException("username", username);
+            throw new UserAlreadyExistsException("username", USERNAME_ALREADY_EXISTS);
         }
 
         if (userRepository.existsByEmailAndDeletedAtIsNull(email)) {
-            throw new UserAlreadyExistsException("email", email);
+            throw new UserAlreadyExistsException("email", EMAIL_ALREADY_EXISTS);
         }
     }
 
@@ -181,14 +197,9 @@ public class UserService {
             throw new InvalidUserDataException("password", "La contraseña es obligatoria");
         }
         if (userRegisterDTO.getPassword().length() < 6) {
-            throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
+            throw new InvalidUserDataException("password", INVALID_PASSWORD);
         }
-        if (userRepository.findByUsername(userRegisterDTO.getUsername()).isPresent()) {
-            throw new UserAlreadyExistsException("username", userRegisterDTO.getUsername());
-        }
-        if (userRepository.existsByEmail(userRegisterDTO.getEmail())) {
-            throw new UserAlreadyExistsException("email", userRegisterDTO.getEmail());
-        }
+        validateUniqueEmailAndUsername(userRegisterDTO.getUsername(), userRegisterDTO.getEmail());
     }
 
     private void validateLoginCredentials(String username, String rawPassword) {
@@ -204,15 +215,15 @@ public class UserService {
         if (userUpdateDTO.getUsername() != null &&
                 !existingUser.getUsername().equals(userUpdateDTO.getUsername()) &&
                 userRepository.findByUsername(userUpdateDTO.getUsername()).isPresent()) {
-            throw new UserAlreadyExistsException("username", userUpdateDTO.getUsername());
+            throw new UserAlreadyExistsException("username", USERNAME_ALREADY_EXISTS);
         }
         if (userUpdateDTO.getEmail() != null &&
                 !existingUser.getEmail().equals(userUpdateDTO.getEmail()) &&
                 userRepository.existsByEmail(userUpdateDTO.getEmail())) {
-            throw new UserAlreadyExistsException("email", userUpdateDTO.getEmail());
+            throw new UserAlreadyExistsException("email", EMAIL_ALREADY_EXISTS);
         }
         if (userUpdateDTO.getPassword() != null && userUpdateDTO.getPassword().length() < 6) {
-            throw new InvalidUserDataException("password", "La contraseña debe tener al menos 6 caracteres");
+            throw new InvalidUserDataException("password", INVALID_PASSWORD);
         }
     }
 

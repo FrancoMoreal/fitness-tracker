@@ -24,6 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class AuthService {
 
+    private static final String USER_NOT_FOUND = "Usuario no encontrado";
+    private static final String USER_DISABLED = "Usuario deshabilitado";
+    private static final String INVALID_CREDENTIALS = "Credenciales inválidas";
+    private static final String INVALID_TOKEN = "Token inválido";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
@@ -35,38 +40,12 @@ public class AuthService {
     public AuthResponse login(String username, String password) {
         log.info("Intentando login para usuario: {}", username);
 
-        // Buscar usuario por username
-        User user = userRepository.findByUsernameAndDeletedAtIsNull(username).orElseThrow(() -> {
-            log.warn("Usuario no encontrado: {}", username);
-            return new UserNotFoundException("Usuario no encontrado");
-        });
+        User user = validateCredentials(username, password);
 
-        // Validar que esté habilitado
-        if (!user.getEnabled()) {
-            log.warn("Intento de login con usuario deshabilitado: {}", username);
-            throw new UnauthorizedException("Usuario deshabilitado");
-        }
-
-        // Validar password
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            log.warn("Password incorrecto para usuario: {}", username);
-            throw new UnauthorizedException("Credenciales inválidas");
-        }
-
-        // Generar token JWT (usar username porque generateToken acepta String)
         String token = jwtTokenProvider.generateToken(user.getUsername());
-
         log.info("Login exitoso para usuario: {}", username);
 
-        // Mapear User a UserDTO
-        UserDTO userDTO = userMapper.toDto(user);
-
-        // Mapear Member o Trainer si existe
-        MemberDTO memberDTO = user.getMember() != null ? memberMapper.toDTO(user.getMember()) : null;
-        TrainerDTO trainerDTO = user.getTrainer() != null ? trainerMapper.toDTO(user.getTrainer()) : null;
-
-        return AuthResponse.builder().token(token).type("Bearer").user(userDTO).member(memberDTO).trainer(trainerDTO)
-                .build();
+        return buildAuthResponse(user, token);
     }
 
     @Transactional(readOnly = true)
@@ -74,18 +53,52 @@ public class AuthService {
         log.debug("Validando token");
 
         if (!jwtTokenProvider.validateToken(token)) {
-            throw new UnauthorizedException("Token inválido");
+            throw new UnauthorizedException(INVALID_TOKEN);
         }
 
         String username = jwtTokenProvider.getUsernameFromToken(token);
 
         User user = userRepository.findByUsernameAndDeletedAtIsNull(username)
-                .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado"));
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
         if (!user.getEnabled()) {
-            throw new UnauthorizedException("Usuario deshabilitado");
+            throw new UnauthorizedException(USER_DISABLED);
         }
 
         return user;
+    }
+
+    /* Métodos privados reutilizables */
+    private User validateCredentials(String username, String password) {
+        User user = userRepository.findByUsernameAndDeletedAtIsNull(username).orElseThrow(() -> {
+            log.warn("Usuario no encontrado: {}", username);
+            return new UserNotFoundException(USER_NOT_FOUND);
+        });
+
+        if (!user.getEnabled()) {
+            log.warn("Intento de login con usuario deshabilitado: {}", username);
+            throw new UnauthorizedException(USER_DISABLED);
+        }
+
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            log.warn("Password incorrecto para usuario: {}", username);
+            throw new UnauthorizedException(INVALID_CREDENTIALS);
+        }
+
+        return user;
+    }
+
+    private AuthResponse buildAuthResponse(User user, String token) {
+        UserDTO userDTO = userMapper.toDto(user);
+        MemberDTO memberDTO = user.getMember() != null ? memberMapper.toDTO(user.getMember()) : null;
+        TrainerDTO trainerDTO = user.getTrainer() != null ? trainerMapper.toDTO(user.getTrainer()) : null;
+
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .user(userDTO)
+                .member(memberDTO)
+                .trainer(trainerDTO)
+                .build();
     }
 }
