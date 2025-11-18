@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="006-create-exercises-table" author="your-name">
+        <createTable tableName="exercises">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="category" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="primary_muscle" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="video_url" type="VARCHAR(500)"/>
+            <column name="image_url" type="VARCHAR(500)"/>
+            <column name="difficulty" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_custom" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_by_trainer_id" type="BIGINT"/>
+            <column name="instructions" type="TEXT"/>
+            <column name="equipment" type="VARCHAR(500)"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="006-add-exercises-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="exercises"
+                baseColumnNames="created_by_trainer_id"
+                constraintName="fk_exercise_trainer"
+                referencedTableName="trainers"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+    </changeSet>
+
+    <changeSet id="006-add-exercises-indexes" author="your-name">
+        <createIndex tableName="exercises" indexName="idx_exercise_category">
+            <column name="category"/>
+        </createIndex>
+        <createIndex tableName="exercises" indexName="idx_exercise_muscle">
+            <column name="primary_muscle"/>
+        </createIndex>
+        <createIndex tableName="exercises" indexName="idx_exercise_difficulty">
+            <column name="difficulty"/>
+        </createIndex>
+        <createIndex tableName="exercises" indexName="idx_exercise_custom">
+            <column name="is_custom"/>
+        </createIndex>
+        <createIndex tableName="exercises" indexName="idx_exercise_creator">
+            <column name="created_by_trainer_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

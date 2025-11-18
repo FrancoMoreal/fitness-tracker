@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Tabla: workout_plans -->
+    <changeSet id="007-create-workout-plans-table" author="your-name">
+        <createTable tableName="workout_plans">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="member_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trainer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-add-workout-plans-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="workout_plans"
+                baseColumnNames="member_id"
+                constraintName="fk_workout_member"
+                referencedTableName="members"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="workout_plans"
+                baseColumnNames="trainer_id"
+                constraintName="fk_workout_trainer"
+                referencedTableName="trainers"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="007-add-workout-plans-indexes" author="your-name">
+        <createIndex tableName="workout_plans" indexName="idx_workout_member">
+            <column name="member_id"/>
+        </createIndex>
+        <createIndex tableName="workout_plans" indexName="idx_workout_trainer">
+            <column name="trainer_id"/>
+        </createIndex>
+        <createIndex tableName="workout_plans" indexName="idx_workout_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Tabla: workout_days -->
+    <changeSet id="007-create-workout-days-table" author="your-name">
+        <createTable tableName="workout_days">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="workout_plan_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="day_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="day_number" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-add-workout-days-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="workout_days"
+                baseColumnNames="workout_plan_id"
+                constraintName="fk_day_plan"
+                referencedTableName="workout_plans"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="007-add-workout-days-indexes" author="your-name">
+        <createIndex tableName="workout_days" indexName="idx_day_plan">
+            <column name="workout_plan_id"/>
+        </createIndex>
+        <createIndex tableName="workout_days" indexName="idx_day_number">
+            <column name="day_number"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Tabla: workout_exercises -->
+    <changeSet id="007-create-workout-exercises-table" author="your-name">
+        <createTable tableName="workout_exercises">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="workout_day_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="exercise_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sets" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reps" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight" type="DOUBLE"/>
+            <column name="rest_seconds" type="INT"/>
+            <column name="order_in_workout" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-add-workout-exercises-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="workout_exercises"
+                baseColumnNames="workout_day_id"
+                constraintName="fk_workout_ex_day"
+                referencedTableName="workout_days"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <addForeignKeyConstraint
+                baseTableName="workout_exercises"
+                baseColumnNames="exercise_id"
+                constraintName="fk_workout_ex_exercise"
+                referencedTableName="exercises"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="007-add-workout-exercises-indexes" author="your-name">
+        <createIndex tableName="workout_exercises" indexName="idx_workout_ex_day">
+            <column name="workout_day_id"/>
+        </createIndex>
+        <createIndex tableName="workout_exercises" indexName="idx_workout_ex_exercise">
+            <column name="exercise_id"/>
+        </createIndex>
+        <createIndex tableName="workout_exercises" indexName="idx_workout_ex_order">
+            <column name="order_in_workout"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Tabla: workout_completions -->
+    <changeSet id="007-create-workout-completions-table" author="your-name">
+        <createTable tableName="workout_completions">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="member_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="workout_day_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="completed_at" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rating" type="INT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-add-workout-completions-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="workout_completions"
+                baseColumnNames="member_id"
+                constraintName="fk_completion_member"
+                referencedTableName="members"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="workout_completions"
+                baseColumnNames="workout_day_id"
+                constraintName="fk_completion_day"
+                referencedTableName="workout_days"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="007-add-workout-completions-indexes" author="your-name">
+        <createIndex tableName="workout_completions" indexName="idx_completion_member">
+            <column name="member_id"/>
+        </createIndex>
+        <createIndex tableName="workout_completions" indexName="idx_completion_day">
+            <column name="workout_day_id"/>
+        </createIndex>
+        <createIndex tableName="workout_completions" indexName="idx_completion_date">
+            <column name="completed_at"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Tabla: exercise_logs -->
+    <changeSet id="007-create-exercise-logs-table" author="your-name">
+        <createTable tableName="exercise_logs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="workout_completion_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="workout_exercise_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sets_completed" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="reps_completed" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight_used" type="DOUBLE"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="007-add-exercise-logs-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="exercise_logs"
+                baseColumnNames="workout_completion_id"
+                constraintName="fk_log_completion"
+                referencedTableName="workout_completions"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+        <addForeignKeyConstraint
+                baseTableName="exercise_logs"
+                baseColumnNames="workout_exercise_id"
+                constraintName="fk_log_exercise"
+                referencedTableName="workout_exercises"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="007-add-exercise-logs-indexes" author="your-name">
+        <createIndex tableName="exercise_logs" indexName="idx_log_completion">
+            <column name="workout_completion_id"/>
+        </createIndex>
+        <createIndex tableName="exercise_logs" indexName="idx_log_exercise">
+            <column name="workout_exercise_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

@@ -29,7 +29,6 @@ public class MemberController {
     private final MemberService memberService;
 
     @GetMapping
-    // ACA ESTA EL PROBLEMA...
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar todos los miembros", description = "Obtiene lista de miembros activos")
     public ResponseEntity<List<MemberDTO>> getAllMembers() {
