@@ -4,6 +4,7 @@ import com.example.fitnesstracker.enums.RequestStatus;
 import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDateTime;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = {"member", "trainer"})
 public class TrainerAssignmentRequest extends BaseEntity {

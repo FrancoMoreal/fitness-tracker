@@ -4,6 +4,7 @@ import com.example.fitnesstracker.dto.request.trainer.RegisterTrainerDTO;
 import com.example.fitnesstracker.dto.request.trainer.UpdateTrainerDTO;
 import com.example.fitnesstracker.dto.response.TrainerDTO;
 import com.example.fitnesstracker.enums.UserType;
+import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.mapper.TrainerMapper;
 import com.example.fitnesstracker.model.Trainer;
@@ -15,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,6 +36,7 @@ public class TrainerService {
     public TrainerDTO registerTrainer(RegisterTrainerDTO dto) {
         log.info("Registrando nuevo entrenador: {}", dto.getUsername());
 
+        validateHourlyRate(dto.getHourlyRate());
         userService.validateUniqueEmailAndUsername(dto.getUsername(), dto.getEmail());
 
         User user = userService.createUserWithType(dto.getUsername(), dto.getEmail(), dto.getPassword(), UserType.TRAINER);
@@ -42,7 +45,6 @@ public class TrainerService {
         log.info("Entrenador registrado exitosamente: {} (ID: {})", trainer.getFullName(), trainer.getId());
         return trainerMapper.toDTO(trainer);
     }
-
 
     public TrainerDTO getTrainerById(Long trainerId) {
         log.debug("Buscando entrenador por ID: {}", trainerId);
@@ -74,6 +76,7 @@ public class TrainerService {
     public TrainerDTO updateTrainer(Long trainerId, UpdateTrainerDTO dto) {
         log.info("Actualizando entrenador: {}", trainerId);
 
+        validateHourlyRate(dto.getHourlyRate());
         Trainer trainer = findExistingTrainerById(trainerId);
         trainerMapper.updateFromDTO(dto, trainer);
 
@@ -125,6 +128,12 @@ public class TrainerService {
     }
 
     /* Métodos privados reutilizables */
+    private void validateHourlyRate(BigDecimal hourlyRate) {
+        if (hourlyRate == null || hourlyRate.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new InvalidUserDataException("Tarifa horaria debe ser mayor a 0");
+        }
+    }
+
     private Trainer createTrainer(RegisterTrainerDTO dto, User user) {
         String certificationsStr = String.join(",", dto.getCertifications());
         return trainerRepository.save(Trainer.builder()

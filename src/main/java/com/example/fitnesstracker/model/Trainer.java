@@ -3,6 +3,7 @@ package com.example.fitnesstracker.model;
 import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -15,7 +16,7 @@ import java.util.HashSet;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @EqualsAndHashCode(exclude = { "user", "assignedMembers" }, callSuper = false)
 @ToString(exclude = { "user", "assignedMembers" })
 public class Trainer extends BaseEntity {

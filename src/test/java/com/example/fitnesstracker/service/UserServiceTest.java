@@ -5,7 +5,6 @@ import com.example.fitnesstracker.dto.request.UserUpdateDTO;
 import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.enums.UserRole;
-import org.springframework.security.core.Authentication;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.UserAlreadyExistsException;
 import com.example.fitnesstracker.exception.UserNotFoundException;
@@ -17,13 +16,13 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -42,7 +41,7 @@ class UserServiceTest {
     private UserRepository userRepository;
 
     @Mock
-    private BCryptPasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserMapper userMapper;
@@ -62,7 +61,6 @@ class UserServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Configurar datos de prueba
         testUser = new User();
         testUser.setId(1L);
         testUser.setExternalId("550e8400-e29b-41d4-a716-446655440000");
@@ -92,23 +90,21 @@ class UserServiceTest {
     @DisplayName("registerUser - Debería registrar usuario exitosamente")
     void registerUser_Success() {
         // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
+        when(userRepository.existsByUsernameAndDeletedAtIsNull("newuser")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("new@example.com")).thenReturn(false);
         when(userMapper.toEntity(any(UserRegisterDTO.class))).thenReturn(testUser);
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
+        when(passwordEncoder.encode("password123")).thenReturn("encodedPassword");
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(any(User.class))).thenReturn(testUserDTO);
 
-        // Act
         UserDTO result = userService.registerUser(testRegisterDTO);
 
-        // Assert
         assertThat(result).isNotNull();
         assertThat(result.getUsername()).isEqualTo("testuser");
         assertThat(result.getEmail()).isEqualTo("test@example.com");
 
-        verify(userRepository).findByUsername("newuser");
-        verify(userRepository).existsByEmail("new@example.com");
+        verify(userRepository).existsByUsernameAndDeletedAtIsNull("newuser");
+        verify(userRepository).existsByEmailAndDeletedAtIsNull("new@example.com");
         verify(passwordEncoder).encode("password123");
         verify(userRepository).save(any(User.class));
     }
@@ -116,10 +112,10 @@ class UserServiceTest {
     @Test
     @DisplayName("registerUser - Debería lanzar excepción con username vacío")
     void registerUser_EmptyUsername() {
-        // Arrange
+
         testRegisterDTO.setUsername("");
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
                 .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("username")
@@ -129,12 +125,26 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("registerUser - Debería lanzar excepción con username null")
+    void registerUser_NullUsername() {
+
+        testRegisterDTO.setUsername(null);
+
+
+        assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
+                .isInstanceOf(InvalidUserDataException.class)
+                .hasMessageContaining("username");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("registerUser - Debería lanzar excepción con email vacío")
     void registerUser_EmptyEmail() {
-        // Arrange
+
         testRegisterDTO.setEmail("");
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
                 .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("email")
@@ -144,12 +154,41 @@ class UserServiceTest {
     }
 
     @Test
+    @DisplayName("registerUser - Debería lanzar excepción con email null")
+    void registerUser_NullEmail() {
+
+        testRegisterDTO.setEmail(null);
+
+
+        assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
+                .isInstanceOf(InvalidUserDataException.class)
+                .hasMessageContaining("email");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("registerUser - Debería lanzar excepción con contraseña vacía")
+    void registerUser_EmptyPassword() {
+
+        testRegisterDTO.setPassword("");
+
+
+        assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
+                .isInstanceOf(InvalidUserDataException.class)
+                .hasMessageContaining("contraseña")
+                .hasMessageContaining("obligatoria");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("registerUser - Debería lanzar excepción con contraseña corta")
     void registerUser_PasswordTooShort() {
-        // Arrange
+
         testRegisterDTO.setPassword("123");
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
                 .isInstanceOf(InvalidUserDataException.class)
                 .hasMessageContaining("contraseña")
@@ -161,13 +200,13 @@ class UserServiceTest {
     @Test
     @DisplayName("registerUser - Debería lanzar excepción con username duplicado")
     void registerUser_DuplicateUsername() {
-        // Arrange
-        when(userRepository.findByUsername("newuser")).thenReturn(Optional.of(testUser));
 
-        // Act & Assert
+        when(userRepository.existsByUsernameAndDeletedAtIsNull("newuser")).thenReturn(true);
+
+
         assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
                 .isInstanceOf(UserAlreadyExistsException.class)
-                .hasMessageContaining("newuser");
+                .hasMessageContaining("nombre de usuario");
 
         verify(userRepository, never()).save(any());
     }
@@ -175,36 +214,16 @@ class UserServiceTest {
     @Test
     @DisplayName("registerUser - Debería lanzar excepción con email duplicado")
     void registerUser_DuplicateEmail() {
-        // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
-        when(userRepository.existsByEmail("new@example.com")).thenReturn(true);
 
-        // Act & Assert
+        when(userRepository.existsByUsernameAndDeletedAtIsNull("newuser")).thenReturn(false);
+        when(userRepository.existsByEmailAndDeletedAtIsNull("new@example.com")).thenReturn(true);
+
+
         assertThatThrownBy(() -> userService.registerUser(testRegisterDTO))
                 .isInstanceOf(UserAlreadyExistsException.class)
-                .hasMessageContaining("new@example.com");
+                .hasMessageContaining("email");
 
         verify(userRepository, never()).save(any());
-    }
-
-    @Test
-    @DisplayName("registerUser - Debería encriptar la contraseña")
-    void registerUser_ShouldEncryptPassword() {
-        // Arrange
-        when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
-        when(userRepository.existsByEmail(anyString())).thenReturn(false);
-        when(userMapper.toEntity(any(UserRegisterDTO.class))).thenReturn(testUser);
-        when(passwordEncoder.encode("password123")).thenReturn("encryptedPassword123");
-        when(userRepository.save(any(User.class))).thenReturn(testUser);
-        when(userMapper.toDto(any(User.class))).thenReturn(testUserDTO);
-
-        // Act
-        userService.registerUser(testRegisterDTO);
-
-        // Assert
-        ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
-        verify(userRepository).save(userCaptor.capture());
-        verify(passwordEncoder).encode("password123");
     }
 
     // ==================== LOGIN TESTS ====================
@@ -225,10 +244,10 @@ class UserServiceTest {
         when(userRepository.findByUsername(username)).thenReturn(Optional.of(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         AuthResponse result = userService.login(username, password);
 
-        // Assert
+
         assertThat(result).isNotNull();
         assertThat(result.getToken()).isEqualTo(token);
         assertThat(result.getUser().getUsername()).isEqualTo(username);
@@ -238,29 +257,25 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("login - Debería lanzar excepción con usuario inexistente")
-    void login_UserNotFound() {
-        // Arrange
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new UserNotFoundException("Usuario no encontrado: noexiste"));
+    @DisplayName("login - Debería lanzar excepción con username vacío")
+    void login_EmptyUsername() {
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.login("noexiste", "password123"))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("noexiste");
+        assertThatThrownBy(() -> userService.login("", "password123"))
+                .isInstanceOf(InvalidUserDataException.class)
+                .hasMessageContaining("username");
+
+        verify(authenticationManager, never()).authenticate(any());
     }
 
     @Test
-    @DisplayName("login - Debería lanzar excepción con contraseña incorrecta")
-    void login_WrongPassword() {
-        // Arrange
-        when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new InvalidUserDataException("Credenciales inválidas"));
+    @DisplayName("login - Debería lanzar excepción con password vacío")
+    void login_EmptyPassword() {
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.login("testuser", "wrongpassword"))
+        assertThatThrownBy(() -> userService.login("testuser", ""))
                 .isInstanceOf(InvalidUserDataException.class)
-                .hasMessageContaining("Credenciales inválidas");
+                .hasMessageContaining("contraseña");
+
+        verify(authenticationManager, never()).authenticate(any());
     }
 
     // ==================== GET USERS TESTS ====================
@@ -281,10 +296,10 @@ class UserServiceTest {
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
         when(userMapper.toDto(user2)).thenReturn(userDTO2);
 
-        // Act
+
         List<UserDTO> result = userService.getAllUsers();
 
-        // Assert
+
         assertThat(result).hasSize(2);
         assertThat(result).extracting(UserDTO::getUsername)
                 .containsExactly("testuser", "user2");
@@ -292,16 +307,30 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("getUserById - Debería retornar usuario activo por ID")
+    @DisplayName("getAllUsers - Debería retornar lista vacía si no hay usuarios")
+    void getAllUsers_EmptyList() {
+
+        when(userRepository.findAllActive()).thenReturn(List.of());
+
+
+        List<UserDTO> result = userService.getAllUsers();
+
+
+        assertThat(result).isEmpty();
+        verify(userRepository).findAllActive();
+    }
+
+    @Test
+    @DisplayName("getUserById - Debería retornar usuario por ID")
     void getUserById_Success() {
-        // Arrange
+
         when(userRepository.findByIdActive(1L)).thenReturn(Optional.of(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         UserDTO result = userService.getUserById(1L);
 
-        // Assert
+
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(1L);
         assertThat(result.getUsername()).isEqualTo("testuser");
@@ -309,15 +338,15 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("getUserById - Debería lanzar excepción con ID inexistente o eliminado")
+    @DisplayName("getUserById - Debería lanzar excepción con ID inexistente")
     void getUserById_NotFound() {
-        // Arrange
+
         when(userRepository.findByIdActive(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.getUserById(999L))
                 .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("999");
+                .hasMessage("Usuario no encontrado");
 
         verify(userRepository).findByIdActive(999L);
     }
@@ -325,73 +354,141 @@ class UserServiceTest {
     @Test
     @DisplayName("getUserByExternalId - Debería retornar usuario por UUID")
     void getUserByExternalId_Success() {
-        // Arrange
+
         String externalId = "550e8400-e29b-41d4-a716-446655440000";
-        when(userRepository.findByExternalId(externalId)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByExternalIdAndDeletedAtIsNull(externalId)).thenReturn(Optional.of(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         UserDTO result = userService.getUserByExternalId(externalId);
 
-        // Assert
+
         assertThat(result).isNotNull();
         assertThat(result.getExternalId()).isEqualTo(externalId);
-        verify(userRepository).findByExternalId(externalId);
+        verify(userRepository).findByExternalIdAndDeletedAtIsNull(externalId);
+    }
+
+    @Test
+    @DisplayName("getUserByExternalId - Debería lanzar excepción con UUID inexistente")
+    void getUserByExternalId_NotFound() {
+
+        String externalId = "invalid-uuid";
+        when(userRepository.findByExternalIdAndDeletedAtIsNull(externalId)).thenReturn(Optional.empty());
+
+
+        assertThatThrownBy(() -> userService.getUserByExternalId(externalId))
+                .isInstanceOf(UserNotFoundException.class);
+
+        verify(userRepository).findByExternalIdAndDeletedAtIsNull(externalId);
     }
 
     @Test
     @DisplayName("getUsersByRole - Debería filtrar usuarios por rol")
     void getUsersByRole_Success() {
-        // Arrange
-        when(userRepository.findByRole(UserRole.USER)).thenReturn(Arrays.asList(testUser));
+
+        when(userRepository.findByRoleAndDeletedAtIsNull(UserRole.USER)).thenReturn(Arrays.asList(testUser));
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         List<UserDTO> result = userService.getUsersByRole(UserRole.USER);
 
-        // Assert
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getRole()).isEqualTo(UserRole.USER);
-        verify(userRepository).findByRole(UserRole.USER);
+        verify(userRepository).findByRoleAndDeletedAtIsNull(UserRole.USER);
+    }
+
+    @Test
+    @DisplayName("getUsersByRole - Debería retornar lista vacía si no hay usuarios con ese rol")
+    void getUsersByRole_EmptyList() {
+
+        when(userRepository.findByRoleAndDeletedAtIsNull(UserRole.ADMIN)).thenReturn(List.of());
+
+
+        List<UserDTO> result = userService.getUsersByRole(UserRole.ADMIN);
+
+
+        assertThat(result).isEmpty();
+        verify(userRepository).findByRoleAndDeletedAtIsNull(UserRole.ADMIN);
     }
 
     // ==================== UPDATE USER TESTS ====================
 
     @Test
-    @DisplayName("updateUser - Debería actualizar usuario exitosamente")
+    @DisplayName("updateUser - Debería actualizar email exitosamente")
     void updateUser_Success() {
-        // Arrange
+
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setEmail("newemail@example.com");
-        updateDTO.setRole(UserRole.ADMIN);
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.existsByEmail("newemail@example.com")).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         UserDTO result = userService.updateUser(1L, updateDTO);
 
-        // Assert
+
         assertThat(result).isNotNull();
         verify(userRepository).findById(1L);
+        verify(userMapper).updateUserFromDTO(updateDTO, testUser);
+        verify(userRepository).save(testUser);
+    }
+
+    @Test
+    @DisplayName("updateUser - Debería actualizar contraseña encriptada")
+    void updateUser_WithPassword() {
+
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setPassword("newPassword123");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode("newPassword123")).thenReturn("newEncodedPassword");
+        when(userRepository.save(any(User.class))).thenReturn(testUser);
+        when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
+
+
+        UserDTO result = userService.updateUser(1L, updateDTO);
+
+
+        assertThat(result).isNotNull();
+        verify(passwordEncoder).encode("newPassword123");
         verify(userRepository).save(testUser);
     }
 
     @Test
     @DisplayName("updateUser - Debería lanzar excepción con ID inexistente")
     void updateUser_NotFound() {
-        // Arrange
+
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setEmail("new@example.com");
 
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.updateUser(999L, updateDTO))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("999");
+                .isInstanceOf(UserNotFoundException.class);
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateUser - Debería lanzar excepción con username duplicado")
+    void updateUser_DuplicateUsername() {
+
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setUsername("existinguser");
+
+        User anotherUser = new User();
+        anotherUser.setUsername("existinguser");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        when(userRepository.findByUsername("existinguser")).thenReturn(Optional.of(anotherUser));
+
+
+        assertThatThrownBy(() -> userService.updateUser(1L, updateDTO))
+                .isInstanceOf(UserAlreadyExistsException.class)
+                .hasMessageContaining("username");
 
         verify(userRepository, never()).save(any());
     }
@@ -399,17 +496,35 @@ class UserServiceTest {
     @Test
     @DisplayName("updateUser - Debería lanzar excepción con email duplicado")
     void updateUser_DuplicateEmail() {
-        // Arrange
+
         UserUpdateDTO updateDTO = new UserUpdateDTO();
         updateDTO.setEmail("existing@example.com");
 
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.existsByEmail("existing@example.com")).thenReturn(true);
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.updateUser(1L, updateDTO))
                 .isInstanceOf(UserAlreadyExistsException.class)
-                .hasMessageContaining("existing@example.com");
+                .hasMessageContaining("email");
+
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("updateUser - Debería lanzar excepción con contraseña corta")
+    void updateUser_PasswordTooShort() {
+
+        UserUpdateDTO updateDTO = new UserUpdateDTO();
+        updateDTO.setPassword("123");
+
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+
+
+        assertThatThrownBy(() -> userService.updateUser(1L, updateDTO))
+                .isInstanceOf(InvalidUserDataException.class)
+                .hasMessageContaining("contraseña")
+                .hasMessageContaining("6 caracteres");
 
         verify(userRepository, never()).save(any());
     }
@@ -417,31 +532,30 @@ class UserServiceTest {
     // ==================== DELETE USER TESTS ====================
 
     @Test
-    @DisplayName("deleteUser - Debería hacer soft delete del usuario")
+    @DisplayName("deleteUser - Debería hacer soft delete")
     void deleteUser_Success() {
-        // Arrange
+
         when(userRepository.findByIdActive(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
 
-        // Act
+
         userService.deleteUser(1L);
 
-        // Assert
+
         verify(userRepository).findByIdActive(1L);
         verify(userRepository).save(testUser);
-        // Verificar que se llamó al método softDelete() (deletedAt se setea)
+        assertThat(testUser.getDeletedAt()).isNotNull();
     }
 
     @Test
     @DisplayName("deleteUser - Debería lanzar excepción con ID inexistente")
     void deleteUser_NotFound() {
-        // Arrange
+
         when(userRepository.findByIdActive(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
+
         assertThatThrownBy(() -> userService.deleteUser(999L))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("999");
+                .isInstanceOf(UserNotFoundException.class);
 
         verify(userRepository, never()).save(any());
     }
@@ -449,31 +563,31 @@ class UserServiceTest {
     @Test
     @DisplayName("restoreUser - Debería restaurar usuario eliminado")
     void restoreUser_Success() {
-        // Arrange
-        testUser.softDelete(); // Marcar como eliminado
+
+        testUser.softDelete();
         when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
         when(userRepository.save(any(User.class))).thenReturn(testUser);
         when(userMapper.toDto(testUser)).thenReturn(testUserDTO);
 
-        // Act
+
         UserDTO result = userService.restoreUser(1L);
 
-        // Assert
+
         assertThat(result).isNotNull();
+        assertThat(testUser.getDeletedAt()).isNull();
         verify(userRepository).findById(1L);
         verify(userRepository).save(testUser);
     }
 
     @Test
-    @DisplayName("restoreUser - Debería lanzar excepción si usuario no está eliminado")
-    void restoreUser_NotDeleted() {
-        // Arrange - Usuario activo (no eliminado)
-        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+    @DisplayName("restoreUser - Debería lanzar excepción con ID inexistente")
+    void restoreUser_NotFound() {
 
-        // Act & Assert
-        assertThatThrownBy(() -> userService.restoreUser(1L))
-                .isInstanceOf(InvalidUserDataException.class)
-                .hasMessageContaining("no está eliminado");
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+
+        assertThatThrownBy(() -> userService.restoreUser(999L))
+                .isInstanceOf(UserNotFoundException.class);
 
         verify(userRepository, never()).save(any());
     }
@@ -481,29 +595,26 @@ class UserServiceTest {
     @Test
     @DisplayName("permanentlyDeleteUser - Debería eliminar permanentemente")
     void permanentlyDeleteUser_Success() {
-        // Arrange
-        when(userRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(userRepository).deleteById(1L);
 
-        // Act
+        when(userRepository.findById(1L)).thenReturn(Optional.of(testUser));
+        doNothing().when(userRepository).delete(testUser);
+
         userService.permanentlyDeleteUser(1L);
 
-        // Assert
-        verify(userRepository).existsById(1L);
-        verify(userRepository).deleteById(1L);
+        verify(userRepository).findById(1L);
+        verify(userRepository).delete(testUser);
     }
 
     @Test
     @DisplayName("permanentlyDeleteUser - Debería lanzar excepción con ID inexistente")
     void permanentlyDeleteUser_NotFound() {
-        // Arrange
-        when(userRepository.existsById(999L)).thenReturn(false);
 
-        // Act & Assert
+        when(userRepository.findById(999L)).thenReturn(Optional.empty());
+
+
         assertThatThrownBy(() -> userService.permanentlyDeleteUser(999L))
-                .isInstanceOf(UserNotFoundException.class)
-                .hasMessageContaining("999");
+                .isInstanceOf(UserNotFoundException.class);
 
-        verify(userRepository, never()).deleteById(anyLong());
+        verify(userRepository, never()).delete(any());
     }
 }

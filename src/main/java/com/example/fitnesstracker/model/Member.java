@@ -4,6 +4,7 @@ import com.example.fitnesstracker.enums.AssignmentStatus;
 import com.example.fitnesstracker.model.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
 import java.time.Period;
@@ -17,7 +18,7 @@ import java.time.Period;
 })
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 @Getter
 @Setter
 @EqualsAndHashCode(exclude = {"user", "assignedTrainer"}, callSuper = false)
@@ -46,6 +47,7 @@ public class Member extends BaseEntity {
     @Column(nullable = false)
     private LocalDate membershipEndDate;
 
+    @Builder.Default
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AssignmentStatus assignmentStatus = AssignmentStatus.NO_TRAINER;

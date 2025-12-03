@@ -1,3 +1,4 @@
+
 package com.example.fitnesstracker.model;
 
 import com.example.fitnesstracker.enums.DifficultyLevel;
@@ -47,8 +48,8 @@ public class Exercise extends BaseEntity {
     @Column(nullable = false)
     private DifficultyLevel difficulty;
 
-    @Column(nullable = false)
-    private Boolean isCustom;
+    @Column(name = "is_custom", nullable = false)
+    private boolean isCustom = false;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by_trainer_id")
@@ -60,11 +61,12 @@ public class Exercise extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String equipment;
 
-    @PrePersist
-    public void prePersist() {
-        super.onCreate();
-        if (this.isCustom == null) {
-            this.isCustom = false;
-        }
+    // Accesores explícitos con los nombres que usa ExerciseService
+    public boolean getIsCustom() {
+        return this.isCustom;
+    }
+
+    public void setIsCustom(boolean isCustom) {
+        this.isCustom = isCustom;
     }
 }
