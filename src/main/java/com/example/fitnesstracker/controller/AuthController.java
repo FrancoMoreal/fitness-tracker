@@ -9,6 +9,7 @@ import com.example.fitnesstracker.dto.response.TrainerDTO;
 import com.example.fitnesstracker.service.AuthService;
 import com.example.fitnesstracker.service.MemberService;
 import com.example.fitnesstracker.service.TrainerService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,19 +25,19 @@ public class AuthController {
     private final TrainerService trainerService;
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody UserLoginDTO dto) {
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody UserLoginDTO dto) {
         AuthResponse response = authService.login(dto.getUsername(), dto.getPassword());
         return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register/member")
-    public ResponseEntity<MemberDTO> registerMember(@RequestBody RegisterMemberDTO dto) {
+    public ResponseEntity<MemberDTO> registerMember(@Valid @RequestBody RegisterMemberDTO dto) {
         MemberDTO created = memberService.registerMember(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/register/trainer")
-    public ResponseEntity<TrainerDTO> registerTrainer(@RequestBody RegisterTrainerDTO dto) {
+    public ResponseEntity<TrainerDTO> registerTrainer(@Valid @RequestBody RegisterTrainerDTO dto) {
         TrainerDTO created = trainerService.registerTrainer(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

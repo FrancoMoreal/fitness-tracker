@@ -119,8 +119,8 @@ public class User extends BaseEntity implements UserDetails {
         return username;
     }
 
-    @PrePersist
-    public void prePersist() {
+    @Override
+    public void onCreate() {
         super.onCreate();
         if (this.enabled == null) {
             this.enabled = true;

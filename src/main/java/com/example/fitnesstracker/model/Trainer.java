@@ -76,8 +76,8 @@ public class Trainer extends BaseEntity {
         return assignedMembers == null ? 0 : assignedMembers.size();
     }
 
-    @PrePersist
-    public void prePersist() {
+@Override
+    public void onCreate() {
         super.onCreate();
         if (isActive == null) {
             isActive = true;

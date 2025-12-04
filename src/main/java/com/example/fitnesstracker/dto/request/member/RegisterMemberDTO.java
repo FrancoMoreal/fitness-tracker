@@ -1,10 +1,7 @@
-// java
 package com.example.fitnesstracker.dto.request.member;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,35 +15,41 @@ import lombok.NoArgsConstructor;
 @Schema(description = "Payload para registrar un miembro")
 public class RegisterMemberDTO {
 
-    @NotBlank
-    @Size(min = 3, max = 50)
+    @NotBlank(message = "Username es requerido")
+    @Size(min = 3, max = 50, message = "Username debe tener entre 3 y 50 caracteres")
     @Schema(example = "jdoe", description = "Nombre de usuario")
     private String username;
 
-    @NotBlank
-    @Email
+    @NotBlank(message = "Email es requerido")
+    @Email(message = "Email debe ser válido")
     @Schema(example = "jdoe@example.com", description = "Email del usuario")
     private String email;
 
-    @NotBlank
-    @Size(min = 6)
-    @Schema(example = "secret123", description = "Contraseña")
+    @NotBlank(message = "Password es requerido")
+    @Size(min = 8, max = 100, message = "Password debe tener entre 8 y 100 caracteres")
+    @Pattern(
+            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]+$",
+            message = "Password debe contener mayúscula, minúscula, número y carácter especial"
+    )
+    @Schema(example = "SecurePass123!", description = "Contraseña")
     private String password;
 
-    @NotBlank
+    @NotBlank(message = "Nombre es requerido")
+    @Size(min = 2, max = 50, message = "Nombre debe tener entre 2 y 50 caracteres")
     @Schema(example = "Juan", description = "Nombre")
     private String firstName;
 
-    @NotBlank
+    @NotBlank(message = "Apellido es requerido")
+    @Size(min = 2, max = 50, message = "Apellido debe tener entre 2 y 50 caracteres")
     @Schema(example = "Pérez", description = "Apellido")
     private String lastName;
 
-    @NotBlank
+    @NotBlank(message = "Teléfono es requerido")
     @Schema(example = "+34123456789", description = "Teléfono en formato internacional")
     private String phone;
 
+    @NotNull(message = "Fecha de nacimiento es requerida")
+    @Past(message = "La fecha de nacimiento debe ser en el pasado")
     @Schema(example = "1990-05-20", description = "Fecha de nacimiento (YYYY-MM-DD)")
     private LocalDate dateOfBirth;
-
-
 }
