@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -39,8 +38,6 @@ class MemberServiceTest {
     @Mock
     private MemberRepository memberRepository;
 
-    @Mock
-    private UserRepository userRepository;
 
     @Mock
     private MemberMapper memberMapper;
@@ -106,7 +103,7 @@ class MemberServiceTest {
         when(memberRepository.save(any(Member.class))).thenReturn(member);
         when(memberMapper.toDTO(member)).thenReturn(memberDto);
 
-        MemberDTO result = memberService.registerMember(registerDto);
+        MemberDTO result = memberService.registerMember(registerDto).getMember();
 
         assertThat(result).isEqualTo(memberDto);
         verify(memberRepository).save(any(Member.class));

@@ -24,13 +24,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Trainers", description = "Gestión de entrenadores")
-@SecurityRequirement(name = "bearerAuth")
+// @SecurityRequirement(name = "bearerAuth")
 public class TrainerController {
 
     private final TrainerService trainerService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar todos los entrenadores", description = "Obtiene lista de entrenadores activos")
     public ResponseEntity<List<TrainerDTO>> getAllTrainers() {
         log.info("GET /api/trainers - Listando entrenadores");
@@ -38,7 +38,7 @@ public class TrainerController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener entrenador por ID", description = "Busca un entrenador por su ID")
     public ResponseEntity<TrainerDTO> getTrainerById(@PathVariable Long id) {
         log.info("GET /api/trainers/{} - Obteniendo entrenador", id);
@@ -46,7 +46,7 @@ public class TrainerController {
     }
 
     @GetMapping("/external/{externalId}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener entrenador por External ID", description = "Busca un entrenador por su UUID externo")
     public ResponseEntity<TrainerDTO> getTrainerByExternalId(@PathVariable String externalId) {
         log.info("GET /api/trainers/external/{} - Obteniendo entrenador", externalId);
@@ -54,7 +54,7 @@ public class TrainerController {
     }
 
     @GetMapping("/available")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    //  @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar entrenadores disponibles", description = "Obtiene entrenadores sin miembros asignados")
     public ResponseEntity<List<TrainerDTO>> getAvailableTrainers() {
         log.info("GET /api/trainers/available - Obteniendo trainers disponibles");
@@ -62,7 +62,7 @@ public class TrainerController {
     }
 
     @GetMapping("/specialty/{specialty}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Buscar por especialidad", description = "Busca entrenadores por especialidad")
     public ResponseEntity<List<TrainerDTO>> searchTrainersBySpecialty(@PathVariable String specialty) {
         log.info("GET /api/trainers/specialty/{} - Buscando por especialidad", specialty);
@@ -70,25 +70,25 @@ public class TrainerController {
     }
 
     @GetMapping("/most-busy")
-    @PreAuthorize("hasRole('ADMIN')")
+    //  @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Entrenadores más ocupados", description = "Obtiene entrenadores ordenados por carga de trabajo")
     public ResponseEntity<List<TrainerDTO>> getMostBusyTrainers() {
         log.info("GET /api/trainers/most-busy - Obteniendo trainers más ocupados");
         return ResponseEntity.ok(trainerService.getMostBusyTrainers());
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Crear entrenador", description = "Crea un nuevo entrenador y su usuario asociado")
-    public ResponseEntity<TrainerDTO> createTrainer(@Valid @RequestBody RegisterTrainerDTO dto) {
-        log.info("POST /api/trainers - Creando entrenador: {}", dto.getUsername());
-        TrainerDTO created = trainerService.registerTrainer(dto);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId()).toUri();
-        return ResponseEntity.created(location).body(created);
-    }
+    //   @PostMapping
+    // @PreAuthorize("hasRole('ADMIN')")
+    // @Operation(summary = "Crear entrenador", description = "Crea un nuevo entrenador y su usuario asociado")
+    // public ResponseEntity<TrainerDTO> createTrainer(@Valid @RequestBody RegisterTrainerDTO dto) {
+    //     log.info("POST /api/trainers - Creando entrenador: {}", dto.getUsername());
+    //    TrainerDTO created = trainerService.registerTrainer(dto);
+    //     URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId()).toUri();
+    //     return ResponseEntity.created(location).body(created);
+    // }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Actualizar entrenador", description = "Actualiza los datos de un entrenador")
     public ResponseEntity<TrainerDTO> updateTrainer(@PathVariable Long id, @Valid @RequestBody UpdateTrainerDTO dto) {
         log.info("PUT /api/trainers/{} - Actualizando entrenador", id);
@@ -96,7 +96,7 @@ public class TrainerController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    //  @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar entrenador (soft delete)", description = "Marca un entrenador como eliminado")
     public ResponseEntity<Void> deleteTrainer(@PathVariable Long id) {
         log.info("DELETE /api/trainers/{} - Eliminando entrenador", id);
@@ -105,7 +105,7 @@ public class TrainerController {
     }
 
     @PostMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    //  @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Restaurar entrenador", description = "Restaura un entrenador eliminado")
     public ResponseEntity<Void> restoreTrainer(@PathVariable Long id) {
         log.info("POST /api/trainers/{}/restore - Restaurando entrenador", id);

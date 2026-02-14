@@ -23,13 +23,13 @@ import java.util.List;
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Members", description = "Gestión de miembros del gimnasio")
-@SecurityRequirement(name = "bearerAuth")
+//@SecurityRequirement(name = "bearerAuth")
 public class MemberController {
 
     private final MemberService memberService;
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar todos los miembros", description = "Obtiene lista de miembros activos")
     public ResponseEntity<List<MemberDTO>> getAllMembers() {
         log.info("GET /api/members - Listando miembros");
@@ -38,7 +38,7 @@ public class MemberController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener miembro por ID", description = "Busca un miembro por su ID")
     public ResponseEntity<MemberDTO> getMemberById(@PathVariable Long id) {
         log.info("GET /api/members/{} - Obteniendo miembro", id);
@@ -47,7 +47,7 @@ public class MemberController {
     }
 
     @GetMapping("/external/{externalId}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    //  @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener miembro por External ID", description = "Busca un miembro por su UUID externo")
     public ResponseEntity<MemberDTO> getMemberByExternalId(@PathVariable String externalId) {
         log.info("GET /api/members/external/{} - Obteniendo miembro", externalId);
@@ -55,19 +55,18 @@ public class MemberController {
         return ResponseEntity.ok(member);
     }
 
-    @PostMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "Crear miembro", description = "Crea un nuevo miembro y su usuario asociado")
-    public ResponseEntity<MemberDTO> createMember(@Valid @RequestBody RegisterMemberDTO dto) {
-        log.info("POST /api/members - Creando miembro: {}", dto.getUsername());
-        MemberDTO created = memberService.registerMember(dto);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId())
-                .toUri();
-        return ResponseEntity.created(location).body(created);
-    }
+    //   @PostMapping
+// @PreAuthorize("hasRole('ADMIN')")
+    //*   @Operation(summary = "Crear miembro", description = "Crea un nuevo miembro y su usuario asociado")
+    //  public ResponseEntity<MemberDTO> createMember(@Valid @RequestBody RegisterMemberDTO dto) {
+    //    log.info("POST /api/members - Creando miembro: {}", dto.getUsername());
+    //      MemberDTO created = memberService.registerMember(dto);
+    //     URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(created.getId())
+    //            .toUri();
+    //   return ResponseEntity.created(location).body(created);}
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Actualizar miembro", description = "Actualiza los datos de un miembro")
     public ResponseEntity<MemberDTO> updateMember(@PathVariable Long id, @Valid @RequestBody UpdateMemberDTO dto) {
         log.info("PUT /api/members/{} - Actualizando miembro", id);
@@ -76,7 +75,7 @@ public class MemberController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    // @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar miembro (soft delete)", description = "Marca un miembro como eliminado")
     public ResponseEntity<Void> deleteMember(@PathVariable Long id) {
         log.info("DELETE /api/members/{} - Eliminando miembro", id);
@@ -85,7 +84,7 @@ public class MemberController {
     }
 
     @PostMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ADMIN')")
+    //  @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Restaurar miembro", description = "Restaura un miembro eliminado")
     public ResponseEntity<Void> restoreMember(@PathVariable Long id) {
         log.info("POST /api/members/{}/restore - Restaurando miembro", id);
@@ -94,7 +93,7 @@ public class MemberController {
     }
 
     @GetMapping("/trainer/{trainerId}")
-    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    //  @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar miembros de un trainer", description = "Obtiene miembros asignados a un entrenador")
     public ResponseEntity<List<MemberDTO>> getMembersByTrainer(@PathVariable Long trainerId) {
         log.info("GET /api/members/trainer/{} - Obteniendo miembros del trainer", trainerId);
@@ -103,7 +102,7 @@ public class MemberController {
     }
 
     @GetMapping("/expired")
-    @PreAuthorize("hasRole('ADMIN')")
+    //  @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Listar membresías vencidas", description = "Obtiene miembros con membresía vencida")
     public ResponseEntity<List<MemberDTO>> getExpiredMemberships() {
         log.info("GET /api/members/expired - Obteniendo membresías vencidas");

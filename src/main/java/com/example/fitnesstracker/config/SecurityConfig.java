@@ -1,4 +1,3 @@
-// java
 package com.example.fitnesstracker.config;
 
 import com.example.fitnesstracker.security.CustomUserDetailsService;
@@ -17,6 +16,11 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -44,6 +48,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 1. ACTIVAR CORS (Esto faltaba en tu código anterior)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -52,8 +58,8 @@ public class SecurityConfig {
                                 "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**",
                                 "/api-docs/**", "/swagger-resources/**", "/webjars/**"
                         ).permitAll()
-                        // Hacer público el registro y login bajo /auth/**
-                        .requestMatchers("/auth/**").permitAll()
+                        // 2. AGREGAR /api/trainers A PERMITALL
+                        .requestMatchers("/auth/**", "/api/members", "/api/trainers").permitAll()
                         .requestMatchers(HttpMethod.DELETE, "/api/users/*/permanent").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAnyRole("ADMIN", "TRAINER")
                         .anyRequest().authenticated()
@@ -62,5 +68,24 @@ public class SecurityConfig {
                 .authenticationProvider(authenticationProvider());
 
         return http.build();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Origen de tu frontend
+        configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000"));
+        // Métodos permitidos incluyendo OPTIONS para el preflight
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Headers necesarios para JWT y JSON
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept"));
+        configuration.setAllowCredentials(true);
+        // Exponer headers si es necesario (útil para ver tokens en la respuesta)
+        configuration.setExposedHeaders(Arrays.asList("Authorization"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicar a todas las rutas
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

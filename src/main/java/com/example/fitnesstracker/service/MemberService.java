@@ -2,16 +2,20 @@ package com.example.fitnesstracker.service;
 
 import com.example.fitnesstracker.dto.request.member.RegisterMemberDTO;
 import com.example.fitnesstracker.dto.request.member.UpdateMemberDTO;
+import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.MemberDTO;
+import com.example.fitnesstracker.enums.AssignmentStatus;
 import com.example.fitnesstracker.enums.UserType;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.exception.UserAlreadyExistsException;
 import com.example.fitnesstracker.mapper.MemberMapper;
+import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.Member;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.MemberRepository;
 import com.example.fitnesstracker.repository.UserRepository;
+import com.example.fitnesstracker.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,28 +38,48 @@ public class MemberService {
     private final UserRepository userRepository;
     private final MemberMapper memberMapper;
     private final UserService userService;
+    private final UserMapper userMapper;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
-    public MemberDTO registerMember(RegisterMemberDTO dto) {
+    public AuthResponse registerMember(RegisterMemberDTO dto) {
         log.info("Registrando nuevo miembro: {}", dto.getUsername());
 
-        validateUniquePhone(dto.getPhone());
-        validateAge(dto.getDateOfBirth());
-
-        User savedUser = userService.createUserWithType(
+        // 1. Crear usuario con tipo MEMBER
+        User user = userService.createUserWithType(
                 dto.getUsername(),
                 dto.getEmail(),
                 dto.getPassword(),
                 UserType.MEMBER
         );
 
-        log.debug("Usuario creado: {} (ID: {})", savedUser.getUsername(), savedUser.getId());
+        // 2. Crear perfil de miembro
+        Member member = Member.builder()
+                .user(user)
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .phone(dto.getPhone())
+                .dateOfBirth(dto.getDateOfBirth())
+                .membershipStartDate(LocalDate.now())
+                .membershipEndDate(LocalDate.now().plusMonths(1))
+                .assignmentStatus(AssignmentStatus.NO_TRAINER)
+                .build();
 
-        Member member = createMember(dto, savedUser);
         Member savedMember = memberRepository.save(member);
 
-        log.info("Miembro registrado exitosamente: {} (ID: {})", savedMember.getFullName(), savedMember.getId());
-        return memberMapper.toDTO(savedMember);
+        // 3. Generar token
+        String token = jwtTokenProvider.generateToken(user.getUsername());
+
+        log.info("Miembro registrado: {}", user.getUsername());
+
+        // 4. Retornar AuthResponse
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .user(userMapper.toDto(user))
+                .member(memberMapper.toDTO(savedMember))
+                .message("Miembro registrado exitosamente")
+                .build();
     }
 
     public MemberDTO getMemberById(Long memberId) {

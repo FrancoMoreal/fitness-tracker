@@ -241,8 +241,16 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/register/member - Debería registrar member exitosamente")
     void registerMember_Success() throws Exception {
+        AuthResponse memberAuthResponse = AuthResponse.builder()
+                .token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+                .type("Bearer")
+                .user(testUserDTO)
+                .member(testMemberDTO)
+                .message("Member registrado exitosamente")
+                .build();
+
         when(memberService.registerMember(any(RegisterMemberDTO.class)))
-                .thenReturn(testMemberDTO);
+                .thenReturn(memberAuthResponse);
 
         mockMvc.perform(post("/auth/register/member")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -354,8 +362,16 @@ class AuthControllerTest {
     @Test
     @DisplayName("POST /auth/register/trainer - Debería registrar trainer exitosamente")
     void registerTrainer_Success() throws Exception {
+        AuthResponse trainerAuthResponse = AuthResponse.builder()
+                .token("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+                .type("Bearer")
+                .user(testUserDTO)
+                .trainer(testTrainerDTO)
+                .message("Trainer registrado exitosamente")
+                .build();
+
         when(trainerService.registerTrainer(any(RegisterTrainerDTO.class)))
-                .thenReturn(testTrainerDTO);
+                .thenReturn(trainerAuthResponse);
 
         mockMvc.perform(post("/auth/register/trainer")
                         .contentType(MediaType.APPLICATION_JSON)

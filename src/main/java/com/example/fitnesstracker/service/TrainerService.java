@@ -2,15 +2,18 @@ package com.example.fitnesstracker.service;
 
 import com.example.fitnesstracker.dto.request.trainer.RegisterTrainerDTO;
 import com.example.fitnesstracker.dto.request.trainer.UpdateTrainerDTO;
+import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.TrainerDTO;
 import com.example.fitnesstracker.enums.UserType;
 import com.example.fitnesstracker.exception.InvalidUserDataException;
 import com.example.fitnesstracker.exception.ResourceNotFoundException;
 import com.example.fitnesstracker.mapper.TrainerMapper;
+import com.example.fitnesstracker.mapper.UserMapper;
 import com.example.fitnesstracker.model.Trainer;
 import com.example.fitnesstracker.model.User;
 import com.example.fitnesstracker.repository.TrainerRepository;
 import com.example.fitnesstracker.repository.UserRepository;
+import com.example.fitnesstracker.security.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,19 +34,48 @@ public class TrainerService {
     private final UserRepository userRepository;
     private final TrainerMapper trainerMapper;
     private final UserService userService;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserMapper userMapper;
+
 
     @Transactional
-    public TrainerDTO registerTrainer(RegisterTrainerDTO dto) {
+    public AuthResponse registerTrainer(RegisterTrainerDTO dto) {
         log.info("Registrando nuevo entrenador: {}", dto.getUsername());
 
-        validateHourlyRate(dto.getHourlyRate());
-        userService.validateUniqueEmailAndUsername(dto.getUsername(), dto.getEmail());
+        // 1. Crear usuario con tipo TRAINER
+        User user = userService.createUserWithType(
+                dto.getUsername(),
+                dto.getEmail(),
+                dto.getPassword(),
+                UserType.TRAINER
+        );
 
-        User user = userService.createUserWithType(dto.getUsername(), dto.getEmail(), dto.getPassword(), UserType.TRAINER);
-        Trainer trainer = createTrainer(dto, user);
+        // 2. Crear perfil de trainer
+        Trainer trainer = Trainer.builder()
+                .user(user)
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .specialty(dto.getSpecialty())
+                .certifications(String.join(", ", dto.getCertifications()))
+                .hourlyRate(dto.getHourlyRate())
+                .isActive(true)
+                .build();
 
-        log.info("Entrenador registrado exitosamente: {} (ID: {})", trainer.getFullName(), trainer.getId());
-        return trainerMapper.toDTO(trainer);
+        Trainer savedTrainer = trainerRepository.save(trainer);
+
+        // 3. Generar token
+        String token = jwtTokenProvider.generateToken(user.getUsername());
+
+        log.info("Entrenador registrado: {}", user.getUsername());
+
+        // 4. Retornar AuthResponse
+        return AuthResponse.builder()
+                .token(token)
+                .type("Bearer")
+                .user(userMapper.toDto(user))
+                .trainer(trainerMapper.toDTO(savedTrainer))
+                .message("Entrenador registrado exitosamente")
+                .build();
     }
 
     public TrainerDTO getTrainerById(Long trainerId) {

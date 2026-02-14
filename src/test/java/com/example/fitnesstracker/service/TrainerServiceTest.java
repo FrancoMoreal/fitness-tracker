@@ -18,7 +18,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -97,7 +96,7 @@ class TrainerServiceTest {
                 .lastName("Coach")
                 .fullName("John Coach")
                 .specialty("Strength Training")
-                .certifications(Arrays.asList("NASM", "ACE"))
+                .certifications(List.of("NASM", "ACE"))
                 .hourlyRate(BigDecimal.valueOf(50.00))
                 .isActive(true)
                 .assignedMembersCount(0)
@@ -113,7 +112,7 @@ class TrainerServiceTest {
         when(trainerRepository.save(any(Trainer.class))).thenReturn(trainer);
         when(trainerMapper.toDTO(trainer)).thenReturn(trainerDto);
 
-        TrainerDTO result = trainerService.registerTrainer(registerDto);
+        TrainerDTO result = trainerService.registerTrainer(registerDto).getTrainer();
 
         assertThat(result).isEqualTo(trainerDto);
         verify(trainerRepository).save(any(Trainer.class));
@@ -203,9 +202,10 @@ class TrainerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     @DisplayName("getAllTrainers - Debería retornar lista de entrenadores activos")
     void getAllTrainers_Success() {
-        when(trainerRepository.findAllActiveTrainers()).thenReturn(Arrays.asList(trainer));
+        when(trainerRepository.findAllActiveTrainers()).thenReturn(List.of(trainer));
         when(trainerMapper.toDTO(trainer)).thenReturn(trainerDto);
 
         List<TrainerDTO> result = trainerService.getAllTrainers();
@@ -215,6 +215,7 @@ class TrainerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     @DisplayName("getAllTrainers - Debería retornar lista vacía si no hay entrenadores")
     void getAllTrainers_EmptyList() {
         when(trainerRepository.findAllActiveTrainers()).thenReturn(List.of());
@@ -226,9 +227,10 @@ class TrainerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     @DisplayName("getAvailableTrainers - Debería retornar lista de entrenadores sin miembros asignados")
     void getAvailableTrainers_Success() {
-        when(trainerRepository.findAvailableTrainersWithNoMembers()).thenReturn(Arrays.asList(trainer));
+        when(trainerRepository.findAvailableTrainersWithNoMembers()).thenReturn(List.of(trainer));
         when(trainerMapper.toDTO(trainer)).thenReturn(trainerDto);
 
         List<TrainerDTO> result = trainerService.getAvailableTrainers();
@@ -238,6 +240,7 @@ class TrainerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     @DisplayName("getAvailableTrainers - Debería retornar lista vacía si no hay disponibles")
     void getAvailableTrainers_EmptyList() {
         when(trainerRepository.findAvailableTrainersWithNoMembers()).thenReturn(List.of());
@@ -339,9 +342,9 @@ class TrainerServiceTest {
     // ==================== SEARCH TRAINER TESTS ====================
 
     @Test
-    @DisplayName("searchTrainersBySpecialty - Debería retornar entrenadores por especialidad")
+    @DisplayName("searchTrainersBySpecialty - Debería retornar lista de entrenadores por especialidad")
     void searchTrainersBySpecialty_Success() {
-        when(trainerRepository.findActiveTrainersBySpecialty("Strength")).thenReturn(Arrays.asList(trainer));
+        when(trainerRepository.findActiveTrainersBySpecialty("Strength")).thenReturn(List.of(trainer));
         when(trainerMapper.toDTO(trainer)).thenReturn(trainerDto);
 
         List<TrainerDTO> result = trainerService.searchTrainersBySpecialty("Strength");
@@ -361,9 +364,10 @@ class TrainerServiceTest {
     }
 
     @Test
-    @DisplayName("getMostBusyTrainers - Debería retornar entrenadores más ocupados")
+    @SuppressWarnings("deprecation")
+    @DisplayName("getMostBusyTrainers - Debería retornar lista de entrenadores más ocupados")
     void getMostBusyTrainers_Success() {
-        when(trainerRepository.findMostBusyTrainers()).thenReturn(Arrays.asList(trainer));
+        when(trainerRepository.findMostBusyTrainers()).thenReturn(List.of(trainer));
         when(trainerMapper.toDTO(trainer)).thenReturn(trainerDto);
 
         List<TrainerDTO> result = trainerService.getMostBusyTrainers();
@@ -373,6 +377,7 @@ class TrainerServiceTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     @DisplayName("getMostBusyTrainers - Debería retornar lista vacía si no hay entrenadores")
     void getMostBusyTrainers_EmptyList() {
         when(trainerRepository.findMostBusyTrainers()).thenReturn(List.of());

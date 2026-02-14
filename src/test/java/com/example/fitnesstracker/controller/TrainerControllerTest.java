@@ -1,6 +1,5 @@
 package com.example.fitnesstracker.controller;
 
-import com.example.fitnesstracker.dto.request.trainer.RegisterTrainerDTO;
 import com.example.fitnesstracker.dto.request.trainer.UpdateTrainerDTO;
 import com.example.fitnesstracker.dto.response.TrainerDTO;
 import com.example.fitnesstracker.exception.GlobalExceptionHandler;
@@ -56,7 +55,6 @@ class TrainerControllerTest {
     private com.example.fitnesstracker.security.CustomUserDetailsService customUserDetailsService;
 
     private TrainerDTO testTrainerDTO;
-    private RegisterTrainerDTO registerDTO;
     private UpdateTrainerDTO updateDTO;
 
     @BeforeEach
@@ -72,17 +70,6 @@ class TrainerControllerTest {
                 .hourlyRate(new BigDecimal("50.00"))
                 .isActive(true)
                 .assignedMembersCount(5)
-                .build();
-
-        registerDTO = RegisterTrainerDTO.builder()
-                .username("jtrainer")
-                .email("jtrainer@example.com")
-                .password("SecurePass123!")
-                .firstName("John")
-                .lastName("Trainer")
-                .specialty("Strength Training")
-                .certifications(Arrays.asList("NASM-CPT", "CSCS"))
-                .hourlyRate(new BigDecimal("50.00"))
                 .build();
 
         updateDTO = UpdateTrainerDTO.builder()
@@ -101,7 +88,7 @@ class TrainerControllerTest {
     @DisplayName("GET /api/trainers - Debería retornar lista de trainers (Admin)")
     void getAllTrainers_AsAdmin_Success() throws Exception {
 
-        List<TrainerDTO> trainers = Arrays.asList(testTrainerDTO);
+        List<TrainerDTO> trainers = List.of(testTrainerDTO);
         when(trainerService.getAllTrainers()).thenReturn(trainers);
 
 
@@ -122,7 +109,7 @@ class TrainerControllerTest {
     @DisplayName("GET /api/trainers - Debería permitir acceso a usuarios normales")
     void getAllTrainers_AsUser_Success() throws Exception {
 
-        when(trainerService.getAllTrainers()).thenReturn(Arrays.asList(testTrainerDTO));
+        when(trainerService.getAllTrainers()).thenReturn(List.of(testTrainerDTO));
 
         mockMvc.perform(get("/api/trainers"))
                 .andExpect(status().isOk());
@@ -214,7 +201,7 @@ class TrainerControllerTest {
         TrainerDTO availableTrainer = testTrainerDTO.toBuilder()
                 .assignedMembersCount(0)
                 .build();
-        when(trainerService.getAvailableTrainers()).thenReturn(Arrays.asList(availableTrainer));
+        when(trainerService.getAvailableTrainers()).thenReturn(List.of(availableTrainer));
 
 
         mockMvc.perform(get("/api/trainers/available"))
@@ -233,7 +220,7 @@ class TrainerControllerTest {
     void searchBySpecialty_Success() throws Exception {
 
         when(trainerService.searchTrainersBySpecialty("Strength Training"))
-                .thenReturn(Arrays.asList(testTrainerDTO));
+                .thenReturn(List.of(testTrainerDTO));
 
         mockMvc.perform(get("/api/trainers/specialty/Strength Training"))
                 .andExpect(status().isOk())
@@ -266,7 +253,7 @@ class TrainerControllerTest {
         TrainerDTO busyTrainer = testTrainerDTO.toBuilder()
                 .assignedMembersCount(15)
                 .build();
-        when(trainerService.getMostBusyTrainers()).thenReturn(Arrays.asList(busyTrainer));
+        when(trainerService.getMostBusyTrainers()).thenReturn(List.of(busyTrainer));
 
         mockMvc.perform(get("/api/trainers/most-busy"))
                 .andExpect(status().isOk())
@@ -285,14 +272,34 @@ class TrainerControllerTest {
     }
 
     // ==================== CREATE TRAINER ====================
+    // Nota: El endpoint POST /api/trainers está comentado en el controlador
+    // Los siguientes tests se mantienen comentados hasta que el endpoint sea habilitado
 
+    /*
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/trainers - Debería crear trainer exitosamente")
     void createTrainer_Success() throws Exception {
+        RegisterTrainerDTO registerDTO = RegisterTrainerDTO.builder()
+                .username("jtrainer")
+                .email("jtrainer@example.com")
+                .password("SecurePass123!")
+                .firstName("John")
+                .lastName("Trainer")
+                .specialty("Strength Training")
+                .certifications(Arrays.asList("NASM-CPT", "CSCS"))
+                .hourlyRate(new BigDecimal("50.00"))
+                .build();
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .token("test-token")
+                .type("Bearer")
+                .trainer(testTrainerDTO)
+                .message("Entrenador registrado exitosamente")
+                .build();
 
         when(trainerService.registerTrainer(any(RegisterTrainerDTO.class)))
-                .thenReturn(testTrainerDTO);
+                .thenReturn(authResponse);
 
         mockMvc.perform(post("/api/trainers")
                         .with(csrf())
@@ -330,29 +337,55 @@ class TrainerControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
-                .andExpect(status().isBadRequest()); // Cambiado a 400
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @WithMockUser(roles = "USER")
     @DisplayName("POST /api/trainers - Debería denegar acceso a usuarios normales")
     void createTrainer_Forbidden() throws Exception {
-        // @WebMvcTest no evalúa completamente @PreAuthorize
-        // Mockear el servicio para evitar NullPointerException
+        RegisterTrainerDTO registerDTO = RegisterTrainerDTO.builder()
+                .username("jtrainer")
+                .email("jtrainer@example.com")
+                .password("SecurePass123!")
+                .firstName("John")
+                .lastName("Trainer")
+                .specialty("Strength Training")
+                .certifications(Arrays.asList("NASM-CPT", "CSCS"))
+                .hourlyRate(new BigDecimal("50.00"))
+                .build();
+
+        AuthResponse authResponse = AuthResponse.builder()
+                .token("test-token")
+                .type("Bearer")
+                .trainer(testTrainerDTO)
+                .message("Entrenador registrado exitosamente")
+                .build();
+
         when(trainerService.registerTrainer(any(RegisterTrainerDTO.class)))
-                .thenReturn(testTrainerDTO);
+                .thenReturn(authResponse);
 
         mockMvc.perform(post("/api/trainers")
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerDTO)))
-                .andExpect(status().isCreated()); // En @WebMvcTest puede pasar la validación de rol
+                .andExpect(status().isCreated());
     }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/trainers - Debería retornar 409 con username duplicado")
     void createTrainer_DuplicateUsername() throws Exception {
+        RegisterTrainerDTO registerDTO = RegisterTrainerDTO.builder()
+                .username("jtrainer")
+                .email("jtrainer@example.com")
+                .password("SecurePass123!")
+                .firstName("John")
+                .lastName("Trainer")
+                .specialty("Strength Training")
+                .certifications(Arrays.asList("NASM-CPT", "CSCS"))
+                .hourlyRate(new BigDecimal("50.00"))
+                .build();
 
         when(trainerService.registerTrainer(any(RegisterTrainerDTO.class)))
                 .thenThrow(new InvalidUserDataException("Username ya existe"));
@@ -365,6 +398,7 @@ class TrainerControllerTest {
 
         verify(trainerService).registerTrainer(any(RegisterTrainerDTO.class));
     }
+    */
 
     // ==================== UPDATE TRAINER ====================
 
@@ -530,6 +564,9 @@ class TrainerControllerTest {
 
     // ==================== EDGE CASES ====================
 
+
+    // Nota: El siguiente test está comentado porque el endpoint POST /api/trainers está deshabilitado
+    /*
     @Test
     @WithMockUser(roles = "ADMIN")
     @DisplayName("POST /api/trainers - Debería validar certifications no vacías")
@@ -556,8 +593,9 @@ class TrainerControllerTest {
                         .with(csrf())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonWithEmptyCerts))
-                .andExpect(status().isBadRequest()); // Cambiado a 400
+                .andExpect(status().isBadRequest());
     }
+    */
 
     @Test
     @WithMockUser(roles = "ADMIN")

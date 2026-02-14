@@ -31,14 +31,14 @@ public class AuthController {
     }
 
     @PostMapping("/register/member")
-    public ResponseEntity<MemberDTO> registerMember(@Valid @RequestBody RegisterMemberDTO dto) {
-        MemberDTO created = memberService.registerMember(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<AuthResponse> registerMember(@Valid @RequestBody RegisterMemberDTO dto) {
+        AuthResponse response = memberService.registerMember(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/register/trainer")
-    public ResponseEntity<TrainerDTO> registerTrainer(@Valid @RequestBody RegisterTrainerDTO dto) {
-        TrainerDTO created = trainerService.registerTrainer(dto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    public ResponseEntity<AuthResponse> registerTrainer(@Valid @RequestBody RegisterTrainerDTO dto) {
+        AuthResponse response = trainerService.registerTrainer(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 }
