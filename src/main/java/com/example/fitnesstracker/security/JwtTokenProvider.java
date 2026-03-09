@@ -39,9 +39,14 @@ public class JwtTokenProvider {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UserNotFoundException("Usuario no encontrado: " + username));
 
-        String token = Jwts.builder().setSubject(username).claim("role", user.getRole().name()).setIssuedAt(new Date())
+        String token = Jwts.builder()
+                .setSubject(username)
+                .claim("role", user.getRole().name())
+                .claim("userType", user.getUserType() != null ? user.getUserType().name() : "NONE")
+                .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
-                .signWith(key, SignatureAlgorithm.HS512).compact();
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
 
         //  SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parser().setSigningKey(key).build().parseClaimsJws(token).getBody();

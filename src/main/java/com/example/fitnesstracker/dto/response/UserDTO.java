@@ -1,6 +1,7 @@
 package com.example.fitnesstracker.dto.response;
 
 import com.example.fitnesstracker.enums.UserRole;
+import com.example.fitnesstracker.enums.UserType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
@@ -33,6 +34,9 @@ public class UserDTO {
 
     @Schema(description = "Rol del usuario en el sistema", example = "USER")
     private UserRole role;
+
+    @Schema(description = "Tipo de usuario", example = "MEMBER")
+    private UserType userType;
 
     @Schema(description = "Fecha de creación", example = "2024-01-01T12:00:00")
     private LocalDateTime createdAt;
