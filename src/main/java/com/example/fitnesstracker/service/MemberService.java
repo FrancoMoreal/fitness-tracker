@@ -88,7 +88,12 @@ public class MemberService {
                 .orElseThrow(() -> new ResourceNotFoundException(MEMBER_NOT_FOUND));
         return memberMapper.toDTO(member);
     }
-
+    public MemberDTO getMemberByUsername(String username) {
+        log.debug("Buscando member por username: {}", username);
+        Member member = memberRepository.findByUserUsernameAndDeletedAtIsNull(username)
+                .orElseThrow(() -> new ResourceNotFoundException(MEMBER_NOT_FOUND));
+        return memberMapper.toDTO(member);
+    }
     public MemberDTO getMemberByExternalId(String externalId) {
         log.debug("Buscando miembro por externalId: {}", externalId);
         return memberMapper.toDTO(findExistingMemberByExternalId(externalId));

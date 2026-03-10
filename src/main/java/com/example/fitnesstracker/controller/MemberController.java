@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -91,7 +92,13 @@ public class MemberController {
         memberService.restoreMember(id);
         return ResponseEntity.ok().build();
     }
-
+    @GetMapping("/me")
+    @Operation(summary = "Obtener mi perfil", description = "Retorna el perfil del member autenticado")
+    public ResponseEntity<MemberDTO> getMyProfile(Authentication authentication) {
+        log.info("GET /api/members/me - Usuario: {}", authentication.getName());
+        MemberDTO member = memberService.getMemberByUsername(authentication.getName());
+        return ResponseEntity.ok(member);
+    }
     @GetMapping("/trainer/{trainerId}")
     //  @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Listar miembros de un trainer", description = "Obtiene miembros asignados a un entrenador")

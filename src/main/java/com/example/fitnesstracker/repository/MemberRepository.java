@@ -115,6 +115,10 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("SELECT COUNT(m) FROM Member m WHERE m.deletedAt IS NULL")
     long countAllMembers();
 
+
+    @Query("SELECT m FROM Member m JOIN m.user u WHERE u.username = :username AND m.deletedAt IS NULL")
+    Optional<Member> findByUserUsernameAndDeletedAtIsNull(@Param("username") String username);
+
     @Query("""
                 SELECT m FROM Member m 
                 WHERE (LOWER(m.firstName) LIKE LOWER(CONCAT('%', :search, '%')) 
