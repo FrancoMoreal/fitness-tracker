@@ -30,6 +30,7 @@ public class MemberMapper {
                 .remainingDays(remainingDays).height(entity.getHeight()).weight(entity.getWeight())
                 .isActive(entity.isActive())
                 .assignedTrainerId(entity.getAssignedTrainer() != null ? entity.getAssignedTrainer().getId() : null)
+                .assignmentStatus(entity.getAssignmentStatus())
                 .build();
     }
 

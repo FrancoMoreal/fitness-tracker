@@ -1,4 +1,5 @@
 package com.example.fitnesstracker.dto.response;
+import com.example.fitnesstracker.enums.AssignmentStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,4 +29,5 @@ public class MemberDTO {
     private Double weight;
     private Boolean isActive;
     private Long assignedTrainerId;
+    private AssignmentStatus assignmentStatus;
 }
