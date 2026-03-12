@@ -17,9 +17,9 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
 
     Optional<Trainer> findByExternalId(String externalId);
 
-    /**
-     * Trae Trainer + User en una sola query
-     */
+
+     //  Trae Trainer + User en una sola query
+
     @EntityGraph(attributePaths = {"user"})
     @Query("SELECT t FROM Trainer t WHERE t.user.id = :userId AND t.deletedAt IS NULL")
     Optional<Trainer> findByUserIdWithUser(@Param("userId") Long userId);
@@ -112,6 +112,9 @@ public interface TrainerRepository extends JpaRepository<Trainer, Long> {
 
     @Query("SELECT COUNT(t) FROM Trainer t WHERE t.deletedAt IS NULL")
     long countAllTrainers();
+
+    @Query("SELECT t FROM Trainer t JOIN t.user u WHERE u.username = :username AND t.deletedAt IS NULL")
+    Optional<Trainer> findByUserUsernameAndDeletedAtIsNull(@Param("username") String username);
 
     @Query("""
                 SELECT t FROM Trainer t

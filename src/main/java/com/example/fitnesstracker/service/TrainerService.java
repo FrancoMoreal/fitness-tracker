@@ -41,8 +41,6 @@ public class TrainerService {
     @Transactional
     public AuthResponse registerTrainer(RegisterTrainerDTO dto) {
         log.info("Registrando nuevo entrenador: {}", dto.getUsername());
-
-        // 1. Crear usuario con tipo TRAINER
         User user = userService.createUserWithType(
                 dto.getUsername(),
                 dto.getEmail(),
@@ -50,7 +48,6 @@ public class TrainerService {
                 UserType.TRAINER
         );
 
-        // 2. Crear perfil de trainer
         Trainer trainer = Trainer.builder()
                 .user(user)
                 .firstName(dto.getFirstName())
@@ -63,12 +60,10 @@ public class TrainerService {
 
         Trainer savedTrainer = trainerRepository.save(trainer);
 
-        // 3. Generar token
         String token = jwtTokenProvider.generateToken(user.getUsername());
 
         log.info("Entrenador registrado: {}", user.getUsername());
 
-        // 4. Retornar AuthResponse
         return AuthResponse.builder()
                 .token(token)
                 .type("Bearer")
@@ -87,6 +82,13 @@ public class TrainerService {
         log.debug("Buscando entrenador por externalId: {}", externalId);
         return trainerMapper.toDTO(findExistingTrainerByExternalId(externalId));
     }
+    public TrainerDTO getTrainerByUsername(String username) {
+        log.debug("Buscando entrenador por username: {}", username);
+        return trainerMapper.toDTO(
+                trainerRepository.findByUserUsernameAndDeletedAtIsNull(username)
+                        .orElseThrow(() -> new ResourceNotFoundException(TRAINER_NOT_FOUND))
+        );
+    }
 
     public List<TrainerDTO> getAllTrainers() {
         log.debug("Obteniendo todos los entrenadores activos");
@@ -103,6 +105,7 @@ public class TrainerService {
                 .map(trainerMapper::toDTO)
                 .collect(Collectors.toList());
     }
+
 
     @Transactional
     public TrainerDTO updateTrainer(Long trainerId, UpdateTrainerDTO dto) {

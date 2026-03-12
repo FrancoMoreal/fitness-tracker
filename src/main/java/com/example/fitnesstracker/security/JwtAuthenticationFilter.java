@@ -1,7 +1,7 @@
-// java
 package com.example.fitnesstracker.security;
 
 import jakarta.servlet.FilterChain;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    private static final String COOKIE_NAME = "fitness_tracker_token";
 
     private final JwtTokenProvider jwtTokenProvider;
     private final CustomUserDetailsService customUserDetailsService;
@@ -27,15 +28,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            log.debug("Authorization header: {}", authHeader);
             String jwt = extractJwtFromRequest(request);
 
             if (StringUtils.hasText(jwt) && jwtTokenProvider.validateToken(jwt)) {
                 String username = jwtTokenProvider.getUsernameFromToken(jwt);
                 UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
 
-                log.info("🔐 Usuario: {} | Authorities: {}", username, userDetails.getAuthorities());
+                log.info("Usuario: {} | Authorities: {}", username, userDetails.getAuthorities());
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());
@@ -58,14 +57,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private String extractJwtFromRequest(HttpServletRequest request) {
+        // 1. Intentar desde el header Authorization
         String bearerToken = request.getHeader("Authorization");
-        if (!StringUtils.hasText(bearerToken)) {
-            return null;
+        if (StringUtils.hasText(bearerToken)) {
+            if (bearerToken.startsWith("Bearer ")) {
+                return bearerToken.substring(7);
+            }
+            return bearerToken.trim();
         }
-        // Aceptar tanto "Bearer <token>" como el token puro (útil para Swagger)
-        if (bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+
+        // 2. Fallback: leer desde la cookie HttpOnly
+        if (request.getCookies() != null) {
+            for (Cookie cookie : request.getCookies()) {
+                if (COOKIE_NAME.equals(cookie.getName())) {
+                    String value = cookie.getValue();
+                    if (StringUtils.hasText(value)) {
+                        log.debug("Token extraído desde cookie");
+                        return value;
+                    }
+                }
+            }
         }
-        return bearerToken.trim();
+
+        return null;
     }
 }

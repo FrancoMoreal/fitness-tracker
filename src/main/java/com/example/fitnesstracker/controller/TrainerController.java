@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -44,7 +45,13 @@ public class TrainerController {
         log.info("GET /api/trainers/{} - Obteniendo entrenador", id);
         return ResponseEntity.ok(trainerService.getTrainerById(id));
     }
-
+    @GetMapping("/me")
+    @Operation(summary = "Obtener mi perfil", description = "Retorna el perfil del trainer autenticado")
+    public ResponseEntity<TrainerDTO> getMyProfile(Authentication authentication) {
+        log.info("GET /api/trainers/me - Usuario: {}", authentication.getName());
+        TrainerDTO trainer = trainerService.getTrainerByUsername(authentication.getName());
+        return ResponseEntity.ok(trainer);
+    }
     @GetMapping("/external/{externalId}")
     // @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener entrenador por External ID", description = "Busca un entrenador por su UUID externo")
