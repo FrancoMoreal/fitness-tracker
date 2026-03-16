@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!-- Tabla: nutrition_plans -->
+    <changeSet id="009-create-nutrition-plans-table" author="your-name">
+        <createTable tableName="nutrition_plans">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT"/>
+            <column name="member_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="trainer_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="end_date" type="DATE"/>
+            <column name="notes" type="TEXT"/>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="009-add-nutrition-plans-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="nutrition_plans"
+                baseColumnNames="member_id"
+                constraintName="fk_nutrition_member"
+                referencedTableName="members"
+                referencedColumnNames="id"/>
+        <addForeignKeyConstraint
+                baseTableName="nutrition_plans"
+                baseColumnNames="trainer_id"
+                constraintName="fk_nutrition_trainer"
+                referencedTableName="trainers"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <changeSet id="009-add-nutrition-plans-indexes" author="your-name">
+        <createIndex tableName="nutrition_plans" indexName="idx_nutrition_member">
+            <column name="member_id"/>
+        </createIndex>
+        <createIndex tableName="nutrition_plans" indexName="idx_nutrition_trainer">
+            <column name="trainer_id"/>
+        </createIndex>
+        <createIndex tableName="nutrition_plans" indexName="idx_nutrition_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
+
+    <!-- Tabla: nutrition_meals -->
+    <changeSet id="009-create-nutrition-meals-table" author="your-name">
+        <createTable tableName="nutrition_meals">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="external_id" type="VARCHAR(255)"/>
+            <column name="nutrition_plan_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="meal_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="calories" type="INT"/>
+            <column name="protein" type="DOUBLE"/>
+            <column name="carbs" type="DOUBLE"/>
+            <column name="fat" type="DOUBLE"/>
+            <column name="foods" type="TEXT"/>
+            <column name="notes" type="TEXT"/>
+            <column name="order_in_plan" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="DATETIME"/>
+            <column name="updated_at" type="DATETIME"/>
+            <column name="deleted_at" type="DATETIME"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="009-add-nutrition-meals-foreign-keys" author="your-name">
+        <addForeignKeyConstraint
+                baseTableName="nutrition_meals"
+                baseColumnNames="nutrition_plan_id"
+                constraintName="fk_meal_plan"
+                referencedTableName="nutrition_plans"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="009-add-nutrition-meals-indexes" author="your-name">
+        <createIndex tableName="nutrition_meals" indexName="idx_meal_plan">
+            <column name="nutrition_plan_id"/>
+        </createIndex>
+        <createIndex tableName="nutrition_meals" indexName="idx_meal_type">
+            <column name="meal_type"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

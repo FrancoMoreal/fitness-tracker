@@ -68,17 +68,11 @@ public class Member extends BaseEntity {
         return firstName + " " + lastName;
     }
 
-    /**
-     * Calcula la edad actual
-     */
     public Integer getAge() {
         if (dateOfBirth == null) return null;
         return Period.between(dateOfBirth, LocalDate.now()).getYears();
     }
 
-    /**
-     * Calcula el IMC (Índice de Masa Corporal)
-     */
     public Double calculateBMI() {
         if (weight == null || height == null || height == 0) {
             return null;
@@ -86,17 +80,11 @@ public class Member extends BaseEntity {
         return weight / (height * height);
     }
 
-    /**
-     * Verifica si la membresía está vigente
-     */
     public boolean isMembershipActive() {
         if (membershipEndDate == null) return false;
         return !LocalDate.now().isAfter(membershipEndDate) && this.isActive();
     }
 
-    /**
-     * Verifica si tiene trainer asignado
-     */
     public boolean hasTrainer() {
         return assignedTrainer != null && assignedTrainer.isActive();
     }
