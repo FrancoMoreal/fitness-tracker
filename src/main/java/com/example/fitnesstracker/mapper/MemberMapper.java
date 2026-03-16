@@ -25,6 +25,7 @@ public class MemberMapper {
 
         return MemberDTO.builder().id(entity.getId()).externalId(entity.getExternalId())
                 .firstName(entity.getFirstName()).lastName(entity.getLastName()).fullName(entity.getFullName())
+                .email(entity.getUser().getEmail())
                 .phone(entity.getPhone()).dateOfBirth(entity.getDateOfBirth())
                 .membershipStartDate(entity.getMembershipStartDate()).membershipEndDate(entity.getMembershipEndDate())
                 .remainingDays(remainingDays).height(entity.getHeight()).weight(entity.getWeight())
