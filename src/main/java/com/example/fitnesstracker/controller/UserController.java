@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.controller;
 
+import com.example.fitnesstracker.dto.request.ChangePasswordDTO;
 import com.example.fitnesstracker.dto.request.UserUpdateDTO;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.enums.UserRole;
@@ -13,14 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * Controlador REST para la gestión de usuarios (sin endpoints de autenticación).
- * La autenticación y el registro están ahora centralizados en `AuthController`.
- */
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -75,7 +73,16 @@ public class UserController {
         UserDTO updated = userService.updateUser(id, userUpdateDTO);
         return ResponseEntity.ok(updated);
     }
-
+    @PutMapping("/change-password")
+    @PreAuthorize("hasAnyRole('ADMIN','USER')")
+    @Operation(summary = "Cambiar contraseña", description = "Cambia la contraseña del usuario autenticado")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody ChangePasswordDTO dto,
+            Authentication authentication) {
+        log.info("PUT /api/users/change-password - Usuario: {}", authentication.getName());
+        userService.changePassword(authentication.getName(), dto);
+        return ResponseEntity.noContent().build();
+    }
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Eliminar usuario (soft delete)", description = "Marca un usuario como eliminado (solo ADMIN)")

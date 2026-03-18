@@ -1,5 +1,6 @@
 package com.example.fitnesstracker.service;
 
+import com.example.fitnesstracker.dto.request.ChangePasswordDTO;
 import com.example.fitnesstracker.dto.response.AuthResponse;
 import com.example.fitnesstracker.dto.response.UserDTO;
 import com.example.fitnesstracker.dto.request.UserRegisterDTO;
@@ -226,7 +227,25 @@ public class UserService {
             throw new InvalidUserDataException("password", INVALID_PASSWORD);
         }
     }
+    @Transactional
+    public void changePassword(String username, ChangePasswordDTO dto) {
+        log.info("Cambiando contraseña para usuario: {}", username);
 
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new InvalidUserDataException("Las contraseñas no coinciden");
+        }
+
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new InvalidUserDataException("La contraseña actual es incorrecta");
+        }
+
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        userRepository.save(user);
+        log.info("Contraseña actualizada para usuario: {}", username);
+    }
     private boolean isNullOrEmpty(String value) {
         return value == null || value.trim().isEmpty();
     }
