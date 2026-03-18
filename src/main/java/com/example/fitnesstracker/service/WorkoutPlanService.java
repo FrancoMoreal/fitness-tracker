@@ -309,7 +309,22 @@ public class WorkoutPlanService {
         log.info("Workout completado: member {} - day {}", memberId, dayId);
         return workoutCompletionMapper.toDTO(savedCompletion);
     }
-
+    @Transactional
+    public void cancelWorkoutPlan(Long planId, Long trainerId) {
+        log.info("Trainer {} cancelando plan workout {}", trainerId, planId);
+        WorkoutPlan plan = workoutPlanRepository.findById(planId)
+                .filter(p -> !p.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Plan de workout no encontrado"));
+        if (!plan.getTrainer().getId().equals(trainerId)) {
+            throw new InvalidUserDataException("No tenés permiso para cancelar este plan");
+        }
+        if (plan.getStatus() == WorkoutPlanStatus.CANCELLED) {
+            throw new InvalidUserDataException("El plan ya está cancelado");
+        }
+        plan.setStatus(WorkoutPlanStatus.CANCELLED);
+        workoutPlanRepository.save(plan);
+        log.info("Plan workout {} cancelado", planId);
+    }
     public List<WorkoutCompletionDTO> getWorkoutHistory(Long memberId) {
         log.debug("Obteniendo historial de workouts del member: {}", memberId);
 

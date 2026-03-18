@@ -104,7 +104,16 @@ public class WorkoutPlanController {
         workoutPlanService.deleteWorkoutPlan(planId, trainerId);
         return ResponseEntity.noContent().build();
     }
-
+    @PostMapping("/{planId}/cancel")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Cancelar plan", description = "Trainer cancela un plan de workout")
+    public ResponseEntity<Void> cancelWorkoutPlan(
+            @PathVariable Long planId,
+            @RequestParam Long trainerId) {
+        log.info("POST /api/workout-plans/{}/cancel - Trainer {}", planId, trainerId);
+        workoutPlanService.cancelWorkoutPlan(planId, trainerId);
+        return ResponseEntity.noContent().build();
+    }
     // Member ve y completa workouts
 
     @GetMapping("/members/{memberId}")

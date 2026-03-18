@@ -113,4 +113,14 @@ public class NutritionPlanController {
         nutritionPlanService.removeMeal(mealId, trainerId);
         return ResponseEntity.noContent().build();
     }
+    @PostMapping("/{planId}/cancel")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Cancelar plan", description = "Trainer cancela un plan nutricional")
+    public ResponseEntity<Void> cancelPlan(
+            @PathVariable Long planId,
+            @RequestParam Long trainerId) {
+        log.info("POST /api/nutrition-plans/{}/cancel - Trainer {}", planId, trainerId);
+        nutritionPlanService.cancelPlan(planId, trainerId);
+        return ResponseEntity.noContent().build();
+    }
 }

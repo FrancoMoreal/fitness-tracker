@@ -4,7 +4,8 @@ public enum WorkoutPlanStatus {
     DRAFT("Borrador"),
     ACTIVE("Activo"),
     COMPLETED("Completado"),
-    PAUSED("Pausado");
+    PAUSED("Pausado"),
+    CANCELLED("Cancelado");
 
     private final String displayName;
 

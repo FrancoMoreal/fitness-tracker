@@ -180,4 +180,18 @@ public class NutritionPlanService {
         nutritionMealRepository.save(meal);
         log.info("Comida {} eliminada", mealId);
     }
+    @Transactional
+    public void cancelPlan(Long planId, Long trainerId) {
+        log.info("Trainer {} cancelando plan nutricional {}", trainerId, planId);
+        NutritionPlan plan = findExistingPlan(planId);
+        if (!plan.getTrainer().getId().equals(trainerId)) {
+            throw new InvalidUserDataException("No tenés permiso para cancelar este plan");
+        }
+        if (plan.getStatus() == NutritionPlanStatus.CANCELLED) {
+            throw new InvalidUserDataException("El plan ya está cancelado");
+        }
+        plan.setStatus(NutritionPlanStatus.CANCELLED);
+        nutritionPlanRepository.save(plan);
+        log.info("Plan nutricional {} cancelado", planId);
+    }
 }
