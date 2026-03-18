@@ -103,4 +103,14 @@ public class NutritionPlanController {
         nutritionPlanService.deletePlan(planId, trainerId);
         return ResponseEntity.noContent().build();
     }
+    @DeleteMapping("/meals/{mealId}")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Eliminar comida", description = "Trainer elimina una comida del plan")
+    public ResponseEntity<Void> removeMeal(
+            @PathVariable Long mealId,
+            @RequestParam Long trainerId) {
+        log.info("DELETE /api/nutrition-plans/meals/{} - Trainer {}", mealId, trainerId);
+        nutritionPlanService.removeMeal(mealId, trainerId);
+        return ResponseEntity.noContent().build();
+    }
 }

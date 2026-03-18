@@ -167,4 +167,17 @@ public class NutritionPlanService {
                 .filter(p -> !p.isDeleted())
                 .orElseThrow(() -> new ResourceNotFoundException(PLAN_NOT_FOUND));
     }
+    @Transactional
+    public void removeMeal(Long mealId, Long trainerId) {
+        log.info("Trainer {} eliminando comida {}", trainerId, mealId);
+        NutritionMeal meal = nutritionMealRepository.findById(mealId)
+                .filter(m -> !m.isDeleted())
+                .orElseThrow(() -> new ResourceNotFoundException("Comida no encontrada"));
+        if (!meal.getNutritionPlan().getTrainer().getId().equals(trainerId)) {
+            throw new InvalidUserDataException("No tenés permiso para eliminar esta comida");
+        }
+        meal.softDelete();
+        nutritionMealRepository.save(meal);
+        log.info("Comida {} eliminada", mealId);
+    }
 }
