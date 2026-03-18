@@ -24,9 +24,14 @@ public class WorkoutDayMapper {
                 .dayName(entity.getDayName())
                 .dayNumber(entity.getDayNumber())
                 .notes(entity.getNotes())
-                .totalExercises(entity.getExercises() != null ? entity.getExercises().size() : 0)
+                .totalExercises(entity.getExercises() != null
+                        ? (int) entity.getExercises().stream()
+                        .filter(e -> e.getDeletedAt() == null)
+                        .count()
+                        : 0)
                 .exercises(includeExercises && entity.getExercises() != null
                         ? entity.getExercises().stream()
+                        .filter(exercise -> exercise.getDeletedAt() == null)
                         .map(workoutExerciseMapper::toDTO)
                         .collect(Collectors.toList())
                         : null)

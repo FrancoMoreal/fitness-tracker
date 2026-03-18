@@ -177,4 +177,14 @@ public class WorkoutPlanController {
         long count = workoutPlanService.countActivePlans(trainerId);
         return ResponseEntity.ok(count);
     }
+    @DeleteMapping("/exercises/{workoutExerciseId}")
+    @PreAuthorize("hasRole('USER')")
+    @Operation(summary = "Eliminar ejercicio del día", description = "Trainer elimina un ejercicio de un día")
+    public ResponseEntity<Void> removeExerciseFromDay(
+            @PathVariable Long workoutExerciseId,
+            @RequestParam Long trainerId) {
+        log.info("DELETE /api/workout-plans/exercises/{} - Trainer {}", workoutExerciseId, trainerId);
+        workoutPlanService.removeExerciseFromDay(workoutExerciseId, trainerId);
+        return ResponseEntity.noContent().build();
+    }
 }

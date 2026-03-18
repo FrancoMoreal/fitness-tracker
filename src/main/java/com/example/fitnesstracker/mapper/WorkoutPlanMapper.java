@@ -31,11 +31,16 @@ public class WorkoutPlanMapper {
                 .startDate(entity.getStartDate())
                 .endDate(entity.getEndDate())
                 .notes(entity.getNotes())
-                .totalDays(entity.getWorkoutDays() != null ? entity.getWorkoutDays().size() : 0)
+                .totalDays(entity.getWorkoutDays() != null
+                        ? (int) entity.getWorkoutDays().stream()
+                        .filter(d -> d.getDeletedAt() == null)
+                        .count()
+                        : 0)
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .workoutDays(includeWorkoutDays && entity.getWorkoutDays() != null
                         ? entity.getWorkoutDays().stream()
+                        .filter(day -> day.getDeletedAt() == null)
                         .map(day -> workoutDayMapper.toDTO(day, true))
                         .collect(Collectors.toList())
                         : null)

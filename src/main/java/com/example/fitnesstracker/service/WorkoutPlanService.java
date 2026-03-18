@@ -233,7 +233,25 @@ public class WorkoutPlanService {
 
         log.info("Plan eliminado: {}", planId);
     }
+    @Transactional
+    public void removeExerciseFromDay(Long workoutExerciseId, Long trainerId) {
+        log.info("Trainer {} eliminando ejercicio {} del día", trainerId, workoutExerciseId);
 
+        WorkoutExercise workoutExercise = workoutExerciseRepository.findById(workoutExerciseId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ejercicio del workout no encontrado"));
+
+        if (workoutExercise.isDeleted()) {
+            throw new ResourceNotFoundException("Ejercicio del workout no encontrado");
+        }
+
+        if (!workoutExercise.getWorkoutDay().getWorkoutPlan().getTrainer().getId().equals(trainerId)) {
+            throw new InvalidUserDataException("No tenés permiso para modificar este ejercicio");
+        }
+
+        workoutExercise.softDelete();
+        workoutExerciseRepository.save(workoutExercise);
+        log.info("Ejercicio {} eliminado del día", workoutExerciseId);
+    }
 // member completa un workout day
     @Transactional
     public WorkoutCompletionDTO completeWorkout(Long memberId, Long dayId, CompleteWorkoutDTO dto) {
