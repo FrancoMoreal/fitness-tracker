@@ -227,6 +227,14 @@ public class UserService {
             throw new InvalidUserDataException("password", INVALID_PASSWORD);
         }
     }
+    @Transactional(readOnly = true)
+    public List<UserDTO> getDeletedUsers() {
+        log.debug("Obteniendo usuarios eliminados");
+        return userRepository.findAll().stream()
+                .filter(User::isDeleted)
+                .map(userMapper::toDto)
+                .toList();
+    }
     @Transactional
     public void changePassword(String username, ChangePasswordDTO dto) {
         log.info("Cambiando contraseña para usuario: {}", username);

@@ -37,7 +37,14 @@ public class UserController {
         List<UserDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
-
+    @GetMapping("/deleted")
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Listar usuarios eliminados", description = "Obtiene usuarios con soft delete (solo ADMIN)")
+    public ResponseEntity<List<UserDTO>> getDeletedUsers() {
+        log.info("GET /api/users/deleted - Listando usuarios eliminados");
+        List<UserDTO> users = userService.getDeletedUsers();
+        return ResponseEntity.ok(users);
+    }
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
     @Operation(summary = "Obtener usuario por ID", description = "Obtiene un usuario por su ID")
