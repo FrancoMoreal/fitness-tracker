@@ -146,6 +146,9 @@ public class NutritionPlanService {
                 .map(p -> nutritionPlanMapper.toDTO(p, false))
                 .collect(Collectors.toList());
     }
+    public long countActivePlansByTrainer(Long trainerId) {
+        return nutritionPlanRepository.countActivePlansByTrainer(trainerId);
+    }
 
     @Transactional
     public void deletePlan(Long planId, Long trainerId) {

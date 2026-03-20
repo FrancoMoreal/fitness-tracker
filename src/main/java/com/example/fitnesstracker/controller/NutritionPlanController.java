@@ -92,7 +92,13 @@ public class NutritionPlanController {
         log.info("GET /api/nutrition-plans/trainers/{}", trainerId);
         return ResponseEntity.ok(nutritionPlanService.getPlansByTrainer(trainerId));
     }
-
+    @GetMapping("/trainers/{trainerId}/stats/active-count")
+    @PreAuthorize("hasAnyRole('ADMIN', 'USER')")
+    @Operation(summary = "Contar planes activos", description = "Total de planes nutricionales activos del trainer")
+    public ResponseEntity<Long> countActivePlans(@PathVariable Long trainerId) {
+        log.info("GET /api/nutrition-plans/trainers/{}/stats/active-count", trainerId);
+        return ResponseEntity.ok(nutritionPlanService.countActivePlansByTrainer(trainerId));
+    }
     @DeleteMapping("/{planId}")
     @PreAuthorize("hasRole('USER')")
     @Operation(summary = "Eliminar plan", description = "Trainer elimina un plan nutricional")
